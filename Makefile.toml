@@ -1,0 +1,37 @@
+[tasks.build]
+dependencies = ['prebuild']
+
+[tasks.prebuild]
+dependencies = ['prebuild_1', 'prebuild_2']
+
+[tasks.prebuild_1]
+condition = { files_not_exist = ["${CARGO_MAKE_WORKING_DIRECTORY}/duckdb-wasm32-nothreads.zip"] }
+script = '''
+wget https://github.com/dashql/duckdb/releases/download/0.2.4.1/duckdb-wasm32-nothreads.zip
+'''
+
+[tasks.prebuild_2]
+condition = { files_not_exist = ["${CARGO_MAKE_WORKING_DIRECTORY}/src/duckdb.wasm"] }
+script_runner = "@rust"
+script = '''
+//! ```cargo
+//! [dependencies]
+//! zip = "*"
+//! ```
+
+use std::io::prelude::*;
+
+fn main() {
+    let zipfile = std::fs::File::open(&"duckdb-wasm32-nothreads.zip".to_string()).unwrap();
+
+    let mut archive = zip::ZipArchive::new(zipfile).unwrap();
+
+    let mut file = archive.by_name("duckdb-wasm32-nothreads.zip").expect("File duckdb-wasm32-nothreads.zip not found");
+
+    let mut inner_file = zip::read::read_zipfile_from_stream(&mut file).expect("Failed to open internal archive").expect("Failed to read internal archive");
+
+    let mut contents = Vec::new();
+    inner_file.read_to_end(&mut contents).expect("read_to_end");
+
+    std::fs::write("src/duckdb.wasm", contents).expect("Unable to write duckdb.wasm");
+}'''
