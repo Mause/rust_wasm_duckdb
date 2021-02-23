@@ -16,4 +16,8 @@ repos:
     - id: check-toml
     - id: end-of-file-fixer
     - id: trailing-whitespace
-  
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: f7d063b
+  hooks:
+  - id: pretty-format-toml
+    args: [--autofix]

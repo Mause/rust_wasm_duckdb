@@ -1,12 +1,19 @@
+[dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "*"
+js-sys = "*"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.2"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [package]
 name = "rust_wasm_duckdb"
 version = "0.1.0"
 authors = ["Elliana <me@mause.me>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-wasm-bindgen = "0.2"
-wasm-bindgen-futures = "*"
-js-sys = "*"
+description = "A test to integrate the wasm version of duckdb with rust in the browser"
+repository = "https://github.com/Mause/rust_wasm_duckdb"
+license = "MIT"
