@@ -1,16 +1,25 @@
 [tasks.build]
+clear = true
 dependencies = ['prebuild']
+command = "wasm-pack"
+args = ["build", "--debug", "--target", "web"]
 
-[tasks.prebuild]
-dependencies = ['prebuild_1', 'prebuild_2']
-
-[tasks.prebuild_1]
+[tasks.obtain_duckdb_zip]
 condition = { files_not_exist = ["${CARGO_MAKE_WORKING_DIRECTORY}/duckdb-wasm32-nothreads.zip"] }
 script = '''
 wget https://github.com/dashql/duckdb/releases/download/0.2.4.1/duckdb-wasm32-nothreads.zip
 '''
 
-[tasks.prebuild_2]
+[tasks.prebuild]
+dependencies = ['obtain_duckdb_zip', 'unzip_duckdb']
+
+[tasks.test]
+clear = true
+dependencies = ['build']
+command = "wasm-pack"
+args = ["test", "--node"]
+
+[tasks.unzip_duckdb]
 condition = { files_not_exist = ["${CARGO_MAKE_WORKING_DIRECTORY}/src/duckdb.wasm"] }
 script_runner = "@rust"
 script = '''
