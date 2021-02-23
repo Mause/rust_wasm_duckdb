@@ -2,6 +2,7 @@
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "*"
 js-sys = "*"
+console_error_panic_hook = "*"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.2"

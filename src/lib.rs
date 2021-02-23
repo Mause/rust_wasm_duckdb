@@ -43,6 +43,8 @@ async fn run_async() -> Result<(), JsValue> {
 
 #[wasm_bindgen(start)]
 pub fn run() {
+    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+
     spawn_local(async {
         run_async().await.unwrap_throw();
     });
