@@ -1,7 +1,16 @@
 [dependencies]
-wasm-bindgen = "0.2"
+wasm-bindgen = "*"
 wasm-bindgen-futures = "*"
 js-sys = "*"
+wasm-timer = "*"
+web-sys = {version="*",features = [
+  'Headers',
+  'Request',
+  'RequestInit',
+  'RequestMode',
+  'Response',
+  'Window',
+]}
 console_error_panic_hook = "*"
 
 [dev-dependencies]

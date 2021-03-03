@@ -6,8 +6,10 @@ args = ["build", "--debug", "--target", "web"]
 
 [tasks.obtain_duckdb_zip]
 condition = { files_not_exist = ["${CARGO_MAKE_WORKING_DIRECTORY}/duckdb-wasm32-nothreads.zip"] }
+script_runner = "@duckscript"
 script = '''
-wget https://github.com/dashql/duckdb/releases/download/0.2.4.1/duckdb-wasm32-nothreads.zip
+url = exec gh api /repos/cwida/duckdb/actions/artifacts | jq ".artifacts[] | map(select(.name == 'duckdb-wasm32-nothreads')).archive_download_url"
+exec wget url
 '''
 
 [tasks.prebuild]
@@ -35,9 +37,12 @@ fn main() {
 
     let mut archive = zip::ZipArchive::new(zipfile).unwrap();
 
-    let mut file = archive.by_name("duckdb-wasm32-nothreads.zip").expect("File duckdb-wasm32-nothreads.zip not found");
+    let mut file = archive.by_name("duckdb-wasm32-nothreads.zip")
+        .expect("File duckdb-wasm32-nothreads.zip not found");
 
-    let mut inner_file = zip::read::read_zipfile_from_stream(&mut file).expect("Failed to open internal archive").expect("Failed to read internal archive");
+    let mut inner_file = zip::read::read_zipfile_from_stream(&mut file)
+        .expect("Failed to open internal archive")
+        .expect("Failed to read internal archive");
 
     let mut contents = Vec::new();
     inner_file.read_to_end(&mut contents).expect("read_to_end");
