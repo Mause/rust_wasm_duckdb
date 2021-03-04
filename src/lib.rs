@@ -28,14 +28,6 @@ struct DuckDBColumn {
 }
 
 #[wasm_bindgen]
-struct DuckDBResult {
-    column_count: i32,
-    row_count: i32,
-    columns: Vec<DuckDBColumn>,
-    error_message: String,
-}
-
-#[wasm_bindgen]
 struct Connection {}
 
 #[wasm_bindgen]
@@ -43,7 +35,16 @@ struct Database {}
 
 #[wasm_bindgen(raw_module = "./duckdb.js")]
 extern "C" {
+    #[derive(Debug)]
     type JsString;
+
+    type DuckDBResult;
+
+    #[wasm_bindgen(method, getter)]
+    fn row_count(this: &DuckDBResult) -> i32;
+
+    #[wasm_bindgen(method, getter)]
+    fn column_count(this: &DuckDBResult) -> i32;
 
     #[wasm_bindgen(js_name = _duckdb_open)]
     fn duckdb_open(path: Option<String>, database: *mut Database) -> DuckDBState;
@@ -59,6 +60,9 @@ extern "C" {
 
     #[wasm_bindgen(js_name = _duckdb_query)]
     fn duckdb_query(con: *mut Connection, query: JsString, result: Option<i32>) -> DuckDBState;
+
+    #[wasm_bindgen(js_name = _duckdb_destroy_result)]
+    fn duckdb_destroy_result(result: *mut DuckDBResult);
 
     #[wasm_bindgen(js_name = stringToNewUTF8)]
     fn stringToNewUTF8(string: &str) -> JsString;
@@ -82,7 +86,9 @@ async fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let connection: *mut Connection = malloc(4);
     duckdb_connect(database, connection)?;
 
-    duckdb_query(connection, "select 1\0", None)?;
+    let query = stringToNewUTF8("select 1");
+    console_log!("query: {:?}", query);
+    duckdb_query(connection, query, None)?;
 
     duckdb_disconnect(connection);
 
