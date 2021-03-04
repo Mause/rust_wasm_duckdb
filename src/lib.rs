@@ -35,25 +35,40 @@ struct DuckDBResult {
     error_message: String,
 }
 
+#[wasm_bindgen]
+struct Connection {}
+
+#[wasm_bindgen]
+struct Database {}
+
 #[wasm_bindgen(raw_module = "./duckdb.js")]
 extern "C" {
+    type JsString;
+
     #[wasm_bindgen(js_name = _duckdb_open)]
-    fn duckdb_open(path: Option<String>, database: i32) -> DuckDBState;
+    fn duckdb_open(path: Option<String>, database: *mut Database) -> DuckDBState;
 
     #[wasm_bindgen(js_name = _duckdb_connect)]
-    fn duckdb_connect(db: i32, con: i32) -> DuckDBState;
+    fn duckdb_connect(db: *mut Database, con: *mut Connection) -> DuckDBState;
 
     #[wasm_bindgen(js_name = _duckdb_disconnect)]
-    fn duckdb_disconnect(con: i32);
+    fn duckdb_disconnect(con: *mut Connection);
 
     #[wasm_bindgen(js_name = _duckdb_close)]
-    fn duckdb_close(db: i32);
+    fn duckdb_close(db: *mut Database);
 
     #[wasm_bindgen(js_name = _duckdb_query)]
-    fn duckdb_query(con: i32, query: String, result: Option<i32>) -> DuckDBState;
+    fn duckdb_query(con: *mut Connection, query: JsString, result: Option<i32>) -> DuckDBState;
+
+    #[wasm_bindgen(js_name = stringToNewUTF8)]
+    fn stringToNewUTF8(string: &str) -> JsString;
 
     #[wasm_bindgen]
-    fn _emscripten_builtin_malloc(size: i32) -> i32;
+    fn _emscripten_builtin_malloc(size: i32) -> *mut Object;
+}
+
+fn malloc<T>(size: i32) -> *mut T {
+    _emscripten_builtin_malloc(size) as *mut T
 }
 
 macro_rules! console_log {
@@ -61,10 +76,10 @@ macro_rules! console_log {
 }
 
 async fn run_async() -> Result<(), Box<dyn std::error::Error>> {
-    let database = _emscripten_builtin_malloc(4);
+    let database = malloc(4);
     duckdb_open(None, database)?;
 
-    let connection = _emscripten_builtin_malloc(4);
+    let connection: *mut Connection = malloc(4);
     duckdb_connect(database, connection)?;
 
     duckdb_query(connection, "select 1\0", None)?;
