@@ -71,7 +71,15 @@ extern "C" {
     #[wasm_bindgen(js_name = stringToNewUTF8)]
     fn stringToNewUTF8(string: &str) -> JsString;
 
-    #[wasm_bindgen]
+    fn maybeCStringToJsString(string: i32) -> JsString;
+
+    #[wasm_bindgen(js_name = _duckdb_value_varchar)]
+    fn duckdb_value_varchar(result: *mut DuckDBResult, row: i32, column: i32) -> i32;
+
+    fn cwrap(function: &str, return_type: JsValue, argument_types: Vec<JsValue>) -> Function;
+
+    fn _emscripten_builtin_free(ptr: i32);
+
     fn _emscripten_builtin_malloc(size: i32) -> *mut Object;
 }
 
