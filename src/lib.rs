@@ -59,7 +59,11 @@ extern "C" {
     fn duckdb_close(db: *mut Database);
 
     #[wasm_bindgen(js_name = _duckdb_query)]
-    fn duckdb_query(con: *mut Connection, query: JsString, result: Option<i32>) -> DuckDBState;
+    fn duckdb_query(
+        con: *mut Connection,
+        query: JsString,
+        result: *mut DuckDBResult,
+    ) -> DuckDBState;
 
     #[wasm_bindgen(js_name = _duckdb_destroy_result)]
     fn duckdb_destroy_result(result: *mut DuckDBResult);
@@ -79,16 +83,19 @@ macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
 
+static PTR: i32 = 4;
+
 async fn run_async() -> Result<(), Box<dyn std::error::Error>> {
-    let database = malloc(4);
+    let database = malloc(PTR);
     duckdb_open(None, database)?;
 
-    let connection: *mut Connection = malloc(4);
+    let connection: *mut Connection = malloc(PTR);
     duckdb_connect(database, connection)?;
 
     let query = stringToNewUTF8("select 1");
     console_log!("query: {:?}", query);
-    duckdb_query(connection, query, None)?;
+    let result = malloc(PTR);
+    duckdb_query(connection, query, result)?;
 
     duckdb_disconnect(connection);
 
