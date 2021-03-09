@@ -80,10 +80,10 @@ extern "C" {
 
     fn _emscripten_builtin_free(ptr: i32);
 
-    fn _emscripten_builtin_malloc(size: i32) -> *mut Object;
+    fn _emscripten_builtin_malloc(size: usize) -> *mut Object;
 }
 
-fn malloc<T>(size: i32) -> *mut T {
+fn malloc<T>(size: usize) -> *mut T {
     _emscripten_builtin_malloc(size) as *mut T
 }
 
@@ -91,7 +91,7 @@ macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
 
-static PTR: i32 = 4;
+static PTR: usize = core::mem::size_of::<i32>();
 
 async fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let database = malloc(PTR);
