@@ -18,6 +18,7 @@ jobs:
       image: emscripten/emsdk:latest
 
 
+
     steps:
     - uses: actions/checkout@v2
     - name: Install latest nightly
@@ -27,10 +28,11 @@ jobs:
         override: true
         components: rustfmt, clippy
 
+
     - name: Install openssl
       run: |
         sudo apt update
-        sudo apt-get install build-essential libssl-dev
+        sudo apt-get install build-essential libssl-dev --yes
     - name: Install cargo-make
       uses: actions-rs/cargo@v1
       with:
