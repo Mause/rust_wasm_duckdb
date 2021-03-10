@@ -11,8 +11,9 @@ env:
 
 jobs:
   build:
-
-    runs-on: emscripten/emsdk@latest
+    runs-on: ubuntu-latest
+    container:
+      image: emscripten/emsdk@latest
 
     steps:
     - uses: actions/checkout@v2
