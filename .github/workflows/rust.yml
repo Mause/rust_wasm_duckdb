@@ -11,6 +11,7 @@ env:
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
     container:
       image: emscripten/emsdk:latest
@@ -23,6 +24,8 @@ jobs:
         toolchain: nightly
         override: true
         components: rustfmt, clippy
+    - name: Install openssl
+      run: sudo apt-get install pkg-config libssl-dev
     - name: Install cargo-make
       uses: actions-rs/cargo@v1
       with:
