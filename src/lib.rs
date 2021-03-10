@@ -105,6 +105,22 @@ async fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let result = malloc(PTR);
     duckdb_query(connection, query, result)?;
 
+    let rl_res;
+    unsafe {
+        rl_res = result.as_ref().expect("res");
+    }
+
+    for row_idx in 0..rl_res.row_count() {
+        for col_idx in 0..rl_res.column_count() {
+            let rval = duckdb_value_varchar(result, col_idx, row_idx);
+            let val = maybeCStringToJsString(rval);
+            console_log!("val: {:?}", val);
+            _emscripten_builtin_free(rval);
+        }
+        console_log!("\n");
+    }
+    duckdb_destroy_result(result);
+
     duckdb_disconnect(connection);
 
     duckdb_close(database);
