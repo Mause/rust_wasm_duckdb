@@ -1,6 +1,10 @@
+[tasks.wasm_pack]
+install_crate = { crate_name = "wasm-pack", binary = "wasm-pack", test_arg = "-V" }
+
 [tasks.build]
 clear = true
-dependencies = ['prebuild']
+# dependencies = ['prebuild']
+dependencies = ['wasm_pack']
 command = "wasm-pack"
 args = ["build", "--debug", "--target", "web"]
 
@@ -17,7 +21,7 @@ args = ["build", "--debug", "--target", "web"]
 #
 [tasks.test]
 clear = true
-dependencies = ['build']
+dependencies = ['wasm_pack', 'build']
 command = "wasm-pack"
 args = ["test", "--node"]
 

@@ -16,7 +16,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+    - name: Install cargo-make
+      uses: actions-rs/cargo@v1
+      with:
+        command: install
+        args: --debug cargo-make
+    - name: Run CI
+      uses: actions-rs/cargo@v1
+      with:
+        command: make
+        args: ci-flow
