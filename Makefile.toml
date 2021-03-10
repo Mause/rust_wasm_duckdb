@@ -1,6 +1,6 @@
 [tasks.build]
 clear = true
-dependencies = ['prebuild']
+# dependencies = ['prebuild']
 command = "wasm-pack"
 args = ["build", "--debug", "--target", "web"]
 
