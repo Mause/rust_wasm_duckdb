@@ -11,14 +11,9 @@ env:
 
 jobs:
   build:
-
-
     runs-on: ubuntu-latest
     container:
       image: emscripten/emsdk:latest
-
-
-
 
     steps:
     - uses: actions/checkout@v2
@@ -28,8 +23,6 @@ jobs:
         toolchain: nightly
         override: true
         components: rustfmt, clippy
-
-
 
     - name: Install openssl
       run: |
