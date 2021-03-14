@@ -28,11 +28,9 @@ jobs:
       run: |
         sudo apt update
         sudo apt-get install pkg-config build-essential libssl-dev --yes
-    - name: Install cargo-make
-      uses: actions-rs/cargo@v1
+    - uses: davidB/rust-cargo-make@v1
       with:
-        command: install
-        args: --debug cargo-make
+        version: latest
     - name: Run CI
       uses: actions-rs/cargo@v1
       with:
