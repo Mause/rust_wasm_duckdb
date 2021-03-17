@@ -3,3 +3,5 @@
 *.wasm
 *.log
 node_modules
+*.a
+*.o
