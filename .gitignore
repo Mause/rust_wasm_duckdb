@@ -2,3 +2,4 @@
 *.zip
 *.wasm
 *.log
+node_modules
