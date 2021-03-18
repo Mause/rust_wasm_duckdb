@@ -5,8 +5,8 @@ command = "cargo"
 args = ["web", "build", "--target", "wasm32-unknown-emscripten"]
 
 [tasks.prebuild]
-command = "cargo"
-args = ["script", "setup"]
+script_runner = "@rust"
+script = { file = "setup.rs" }
 
 [tasks.test]
 clear = true
