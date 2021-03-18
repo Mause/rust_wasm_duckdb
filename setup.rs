@@ -12,12 +12,14 @@ use std::io::Read;
 
 #[tokio::main()]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("Starting");
     let release = octocrab::instance()
         .repos("cwida", "duckdb")
         .releases()
         .get_latest()
         .await
         .expect("latest");
+    println!("Release: {:?}", &release);
 
     let url = release
         .assets
