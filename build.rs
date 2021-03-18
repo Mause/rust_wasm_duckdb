@@ -33,11 +33,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .arg("-Wno-unused-parameter")
         .arg("--no-entry")
         .arg("-shared")
-        .arg("reexporter.cpp")
-        .arg("-IC:\\Users\\me\\duckdb\\src\\amalgamation")
+        .arg("src/reexporter.cpp")
+        .arg("-Itarget")
         .arg(
             std::env::current_dir()?
-                .join("src\\duckdb.wasm")
+                .join("target/duckdb.wasm")
                 .to_str()
                 .expect("oops"),
         )
