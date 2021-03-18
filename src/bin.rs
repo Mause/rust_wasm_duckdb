@@ -1,4 +1,6 @@
 #![feature(try_trait)]
+#![feature(static_nobundle)]
+
 use crate::state::DuckDBState;
 use js_sys::{Function, Object, Reflect, WebAssembly};
 use wasm_bindgen::prelude::*;
