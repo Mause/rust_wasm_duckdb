@@ -13,4 +13,4 @@ script = { file = "setup.rs" }
 clear = true
 dependencies = ['build']
 command = "cargo"
-args = ["web", "test", "--node"]
+args = ["web", "test", "--nodejs"]
