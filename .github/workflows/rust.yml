@@ -23,9 +23,12 @@ jobs:
         toolchain: nightly
         override: true
         components: rustfmt, clippy
-
     - uses: Swatinem/rust-cache@v1
-
+    - uses: actions-rs/install@v0.1
+      with:
+        crate: cargo-web
+        version: latest
+        use-tool-cache: true
     - name: Install openssl
       run: |
         sudo apt update
