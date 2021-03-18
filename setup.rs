@@ -8,8 +8,9 @@
 //! octocrab = { version = "*" }
 //! ```
 
-use std::io::Read;
 use octocrab::models::repos::Release;
+use std::io::Read;
+use tokio::fs::File;
 
 #[tokio::main()]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -21,13 +22,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("latest");
 
     std::fs::create_dir_all("target")?;
-    from_file(&release, "libduckdb-src.zip", "duckdb.hpp").await?;
-    from_file(&release, "duckdb-wasm32-nothreads.zip", "duckdb.wasm").await?;
+
+    tokio::try_join!(
+        from_file(&release, "libduckdb-src.zip", "duckdb.hpp"),
+        from_file(&release, "duckdb-wasm32-nothreads.zip", "duckdb.wasm")
+    )?;
 
     Ok(())
 }
 
-async fn from_file(release: &Release, zip_filename: &str, inner_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
+async fn from_file(
+    release: &Release,
+    zip_filename: &str,
+    inner_filename: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = release
         .assets
         .iter()
@@ -36,15 +44,11 @@ async fn from_file(release: &Release, zip_filename: &str, inner_filename: &str) 
         .browser_download_url
         .clone();
 
-    let res = reqwest::get(url)
-        .await
-        .expect("no zip?");
+    println!("Downloading {}", zip_filename);
+    let res = reqwest::get(url).await.expect("no zip?");
 
-    let zip = res
-        .bytes()
-        .await
-        .expect("no bytes?")
-        .to_vec();
+    let zip = res.bytes().await.expect("no bytes?").to_vec();
+    println!("Downloaded {}", zip_filename);
 
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(zip)).unwrap();
 
@@ -55,7 +59,11 @@ async fn from_file(release: &Release, zip_filename: &str, inner_filename: &str) 
     let mut contents = Vec::new();
     file.read_to_end(&mut contents).expect("read_to_end");
 
-    std::fs::write(format!("target/{}", inner_filename).as_str(), contents).expect(format!("Unable to write {}", inner_filename).as_str());
-    
+    tokio::io::copy(
+        &mut std::io::Cursor::new(contents),
+        &mut File::create(format!("target/{}", inner_filename)).await?,
+    )
+    .await?;
+
     Ok(())
 }
