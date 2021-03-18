@@ -38,15 +38,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(zip)).unwrap();
 
     let mut file = archive
-        .by_name("duckdb-wasm32-nothreads.zip")
-        .expect("File duckdb-wasm32-nothreads.zip not found");
-
-    let mut inner_file = zip::read::read_zipfile_from_stream(&mut file)
-        .expect("Failed to open internal archive")
-        .expect("Failed to read internal archive");
+        .by_name("duckdb.wasm")
+        .expect("File duckdb.wasm not found");
 
     let mut contents = Vec::new();
-    inner_file.read_to_end(&mut contents).expect("read_to_end");
+    file.read_to_end(&mut contents).expect("read_to_end");
 
     std::fs::write("src/duckdb.wasm", contents).expect("Unable to write duckdb.wasm");
 
