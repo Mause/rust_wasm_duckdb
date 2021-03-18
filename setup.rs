@@ -9,7 +9,7 @@
 //! ```
 
 use std::io::Read;
-use octocrab::models::repos;
+use octocrab::models::repos::Release;
 
 #[tokio::main()]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
