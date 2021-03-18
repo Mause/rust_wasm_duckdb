@@ -24,7 +24,8 @@ jobs:
         override: true
         components: rustfmt, clippy
     - uses: Swatinem/rust-cache@v1
-    - uses: actions-rs/install@v0.1
+    - name: Install rust script
+      uses: actions-rs/install@v0.1
       with:
         crate: rust-script
         version: latest
