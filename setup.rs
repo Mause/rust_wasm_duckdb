@@ -12,7 +12,6 @@ use std::io::Read;
 
 #[tokio::main()]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    panic!("PANIC");
     println!("Starting");
     let release = octocrab::instance()
         .repos("cwida", "duckdb")
