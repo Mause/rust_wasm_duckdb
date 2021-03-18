@@ -30,7 +30,8 @@ jobs:
         crate: rust-script
         version: latest
         use-tool-cache: true
-    - uses: actions-rs/install@v0.1
+    - name: Install cargo web
+      uses: actions-rs/install@v0.1
       with:
         crate: cargo-web
         version: latest
