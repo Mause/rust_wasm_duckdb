@@ -26,6 +26,11 @@ jobs:
     - uses: Swatinem/rust-cache@v1
     - uses: actions-rs/install@v0.1
       with:
+        crate: rust-script
+        version: latest
+        use-tool-cache: true
+    - uses: actions-rs/install@v0.1
+      with:
         crate: cargo-web
         version: latest
         use-tool-cache: true
