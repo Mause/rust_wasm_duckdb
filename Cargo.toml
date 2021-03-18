@@ -1,3 +1,7 @@
+[[bin]]
+name = "bin"
+path = "src/bin.rs"
+
 [build-dependencies]
 cc = {version= "*", features=['parallel']}
 shellexpand = "*"
@@ -20,9 +24,6 @@ console_error_panic_hook = "*"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
-
-[lib]
-crate-type = ["cdylib", "rlib"]
 
 [package]
 name = "rust_wasm_duckdb"
