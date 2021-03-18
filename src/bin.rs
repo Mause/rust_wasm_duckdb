@@ -128,6 +128,10 @@ async fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+pub fn main() {
+    run();
+}
+
 #[wasm_bindgen(start)]
 pub fn run() {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
