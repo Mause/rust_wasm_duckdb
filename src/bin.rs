@@ -1,123 +1,132 @@
+#![feature(extern_types)]
 #![feature(try_trait)]
 #![feature(static_nobundle)]
 
 use crate::state::DuckDBState;
-use js_sys::{Function, Object, Reflect, WebAssembly};
-use wasm_bindgen::prelude::*;
-use wasm_bindgen_futures::spawn_local;
+use libc::c_char;
+use std::alloc::{alloc, Layout};
+use std::convert::TryInto;
+use std::ffi::CString;
 
 mod state;
 
-// lifted from the `console_log` example
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(a: &str);
-}
-
-#[wasm_bindgen]
+#[repr(C)]
+#[derive(Debug)]
 pub enum DuckDBType {
-    string,
+    DuckDBTypeInvalid = 0,
+    // bool
+    DuckDBTypeBoolean = 1,
+    // int8_t
+    DuckDBTypeTinyint = 2,
+    // int16_t
+    DuckDBTypeSmallint = 3,
+    // int32_t
+    DuckDBTypeInteger = 4,
+    // int64_t
+    DuckDBTypeBigint = 5,
+    // float
+    DuckDBTypeFloat = 6,
+    // double
+    DuckDBTypeDouble = 7,
+    // duckdb_timestamp
+    DuckDBTypeTimestamp = 8,
+    // duckdb_date
+    DuckDBTypeDate = 9,
+    // duckdb_time
+    DuckDBTypeTime = 10,
+    // duckdb_interval
+    DuckDBTypeInterval = 11,
+    // duckdb_hugeint
+    DuckDBTypeHugeint = 12,
+    // const char*
+    DuckDBTypeVarchar = 13,
+    // duckdb_blob
+    DuckDBTypeBlob = 14,
 }
 
-#[wasm_bindgen]
+#[repr(C)]
+#[derive(Debug)]
 struct DuckDBColumn {
     data: i32,
     nullmask: i32,
-    // #[wasm_bindgen(js_name = "type")]
     type_: DuckDBType,
-    name: String,
+    name: *const c_char,
 }
 
-#[wasm_bindgen]
-struct Connection {}
+type Connection = i32;
+type Database = i32;
 
-#[wasm_bindgen]
-struct Database {}
+#[repr(C)]
+#[derive(Debug)]
+struct DuckDBResult {
+    column_count: i64,
+    row_count: i64,
+    columns: *mut DuckDBColumn,
+    error_message: *const c_char,
+}
 
-#[wasm_bindgen(raw_module = "./duckdb.js")]
 extern "C" {
-    #[derive(Debug)]
-    type JsString;
+    fn duckdb_open(path: *const c_char, database: *const Database) -> DuckDBState;
 
-    type DuckDBResult;
+    fn duckdb_connect(db: *const Database, con: *const Connection) -> DuckDBState;
 
-    #[wasm_bindgen(method, getter)]
-    fn row_count(this: &DuckDBResult) -> i32;
+    fn duckdb_disconnect(con: *const Connection);
 
-    #[wasm_bindgen(method, getter)]
-    fn column_count(this: &DuckDBResult) -> i32;
+    fn duckdb_close(db: *const Database);
 
-    #[wasm_bindgen(js_name = _duckdb_open)]
-    fn duckdb_open(path: Option<String>, database: *mut Database) -> DuckDBState;
-
-    #[wasm_bindgen(js_name = _duckdb_connect)]
-    fn duckdb_connect(db: *mut Database, con: *mut Connection) -> DuckDBState;
-
-    #[wasm_bindgen(js_name = _duckdb_disconnect)]
-    fn duckdb_disconnect(con: *mut Connection);
-
-    #[wasm_bindgen(js_name = _duckdb_close)]
-    fn duckdb_close(db: *mut Database);
-
-    #[wasm_bindgen(js_name = _duckdb_query)]
     fn duckdb_query(
-        con: *mut Connection,
-        query: JsString,
-        result: *mut DuckDBResult,
+        con: *const Connection,
+        query: *const c_char,
+        result: *const DuckDBResult,
     ) -> DuckDBState;
 
-    #[wasm_bindgen(js_name = _duckdb_destroy_result)]
-    fn duckdb_destroy_result(result: *mut DuckDBResult);
+    fn duckdb_destroy_result(result: *const DuckDBResult);
 
-    #[wasm_bindgen(js_name = stringToNewUTF8)]
-    fn stringToNewUTF8(string: &str) -> JsString;
+    fn duckdb_value_varchar(result: *const DuckDBResult, row: i64, column: i64) -> *const c_char;
 
-    fn maybeCStringToJsString(string: i32) -> JsString;
-
-    #[wasm_bindgen(js_name = _duckdb_value_varchar)]
-    fn duckdb_value_varchar(result: *mut DuckDBResult, row: i32, column: i32) -> i32;
-
-    fn cwrap(function: &str, return_type: JsValue, argument_types: Vec<JsValue>) -> Function;
-
-    fn _emscripten_builtin_free(ptr: i32);
-
-    fn _emscripten_builtin_malloc(size: usize) -> *mut Object;
+    fn query(query: *const c_char) -> *mut DuckDBResult;
 }
 
-fn malloc<T>(size: usize) -> *mut T {
-    _emscripten_builtin_malloc(size) as *mut T
+fn malloc<T: Sized>(size: usize) -> *const T {
+    unsafe { alloc(Layout::from_size_align(size, 8).expect("FUck")) as *const T }
 }
 
 macro_rules! console_log {
-    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+    ($($t:tt)*) => (stdweb::console!(log, (&format_args!($($t)*).to_string())))
 }
 
 static PTR: usize = core::mem::size_of::<i32>();
 
-async fn run_async() -> Result<(), Box<dyn std::error::Error>> {
+unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
+    let s = CString::new("SELECT 1;").expect("string");
+    let resolved: &DuckDBResult = &*query(s.as_ptr());
+    println!("{:?}", resolved);
+
     let database = malloc(PTR);
-    duckdb_open(None, database)?;
+    duckdb_open(std::ptr::null(), database)?;
 
-    let connection: *mut Connection = malloc(PTR);
+    let connection: *const Connection = malloc(PTR);
     duckdb_connect(database, connection)?;
+    println!("{:?} {:?}", database, connection);
 
-    let query = stringToNewUTF8("select 1");
-    console_log!("query: {:?}", query);
+    println!("building string");
+    let query = CString::new("select 1")?;
+    println!("query: {:?}", query);
     let result = malloc(PTR);
-    duckdb_query(connection, query, result)?;
+    duckdb_query(connection, query.as_ptr(), result)?;
 
-    let rl_res;
-    unsafe {
-        rl_res = result.as_ref().expect("res");
-    }
+    let rl_res = result.as_ref().expect("res");
 
-    for row_idx in 0..rl_res.row_count() {
-        for col_idx in 0..rl_res.column_count() {
+    let length = rl_res.column_count.try_into().unwrap();
+    let columns: Vec<DuckDBColumn> = Vec::from_raw_parts(rl_res.columns, length, length);
+
+    println!("{:?}", columns);
+
+    for row_idx in 0..rl_res.row_count {
+        for col_idx in 0..rl_res.column_count {
             let rval = duckdb_value_varchar(result, col_idx, row_idx);
-            let val = maybeCStringToJsString(rval);
-            console_log!("val: {:?}", val);
-            _emscripten_builtin_free(rval);
+            console_log!("val: {:?}", rval);
+            // _emscripten_builtin_free(rval);
         }
         console_log!("\n");
     }
@@ -130,15 +139,44 @@ async fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn main() {
-    run();
+fn hook(info: &std::panic::PanicInfo) {
+    let mut msg = info.to_string();
+
+    println!("{:?}", msg);
+
+    // Add the error stack to our message.
+    //
+    // This ensures that even if the `console` implementation doesn't
+    // include stacks for `console.error`, the stack is still available
+    // for the user. Additionally, Firefox's console tries to clean up
+    // stack traces, and ruins Rust symbols in the process
+    // (https://bugzilla.mozilla.org/show_bug.cgi?id=1519569) but since
+    // it only touches the logged message's associated stack, and not
+    // the message's contents, by including the stack in the message
+    // contents we make sure it is available to the user.
+    msg.push_str("\n\nStack:\n\n");
+    let error = js_sys::Error::new("test1");
+    println!("{:?}", error);
+    // let stack = error.stack();
+    // println!("{:?}", stack);
+    // msg.push_str(stack.as_str().unwrap_or_default());
+
+    // Safari's devtools, on the other hand, _do_ mess with logged
+    // messages' contents, so we attempt to break their heuristics for
+    // doing that by appending some whitespace.
+    // https://github.com/rustwasm/console_error_panic_hook/issues/7
+    msg.push_str("\n\n");
+
+    // Finally, log the panic with `console.error`!
+    println!("{}", msg);
 }
 
-#[wasm_bindgen(start)]
-pub fn run() {
-    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+pub fn main() -> Result<(), Box<dyn std::error::Error>> {
+    std::panic::set_hook(Box::new(hook));
 
-    spawn_local(async {
-        run_async().await.expect_throw("Something went wrong");
-    });
+    unsafe {
+        run_async().expect("Ooops");
+    }
+
+    Ok(())
 }
