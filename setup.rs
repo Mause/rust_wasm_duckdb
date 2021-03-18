@@ -27,9 +27,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .browser_download_url
         .clone();
 
-    let zip = reqwest::get(url)
+    println!("url: {}", &url);
+
+    let res = reqwest::get(url)
         .await
-        .expect("no zip?")
+        .expect("no zip?");
+    println!("res: {:?}", &res);
+
+    let zip = res
         .bytes()
         .await
         .expect("no bytes?")
