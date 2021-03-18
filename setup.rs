@@ -20,6 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
         .expect("latest");
 
+    std::fs::create_dir_all("target")?;
     from_file(&release, "libduckdb-src.zip", "duckdb.hpp").await?;
     from_file(&release, "duckdb-wasm32-nothreads.zip", "duckdb.wasm").await?;
 
