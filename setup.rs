@@ -9,7 +9,7 @@
 //! ```
 
 use std::io::Read;
-use octocrab::releases;
+use octocrab::models::repos;
 
 #[tokio::main()]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -20,8 +20,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
         .expect("latest");
 
-    from_file("libduckdb-src.zip", "duckdb.hpp").await?;
-    from_file("duckdb-wasm32-nothreads.zip", "duckdb.wasm").await?;
+    from_file(&release, "libduckdb-src.zip", "duckdb.hpp").await?;
+    from_file(&release, "duckdb-wasm32-nothreads.zip", "duckdb.wasm").await?;
 
     Ok(())
 }
@@ -49,10 +49,12 @@ async fn from_file(release: &Release, zip_filename: &str, inner_filename: &str) 
 
     let mut file = archive
         .by_name(inner_filename)
-        .expect(format!("File {} not found", inner_filename));
+        .expect(format!("File {} not found", inner_filename).as_str());
 
     let mut contents = Vec::new();
     file.read_to_end(&mut contents).expect("read_to_end");
 
-    std::fs::write(format!("target/", inner_filename), contents).expect(format!("Unable to write {}", inner_filename));
+    std::fs::write(format!("target/{}", inner_filename).as_str(), contents).expect(format!("Unable to write {}", inner_filename).as_str());
+    
+    Ok(())
 }
