@@ -9,32 +9,35 @@
 //! ```
 
 use std::io::Read;
+use octocrab::releases;
 
 #[tokio::main()]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Starting");
     let release = octocrab::instance()
         .repos("cwida", "duckdb")
         .releases()
         .get_latest()
         .await
         .expect("latest");
-    println!("Release: {:?}", &release);
 
+    from_file("libduckdb-src.zip", "duckdb.hpp").await?;
+    from_file("duckdb-wasm32-nothreads.zip", "duckdb.wasm").await?;
+
+    Ok(())
+}
+
+async fn from_file(release: &Release, zip_filename: &str, inner_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
     let url = release
         .assets
         .iter()
-        .find(|f| f.name == "libduckdb-src.zip")
+        .find(|f| f.name == zip_filename)
         .expect("no sauce?")
         .browser_download_url
         .clone();
 
-    println!("url: {}", &url);
-
     let res = reqwest::get(url)
         .await
         .expect("no zip?");
-    println!("res: {:?}", &res);
 
     let zip = res
         .bytes()
@@ -45,13 +48,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(zip)).unwrap();
 
     let mut file = archive
-        .by_name("duckdb.wasm")
-        .expect("File duckdb.wasm not found");
+        .by_name(inner_filename)
+        .expect(format!("File {} not found", inner_filename));
 
     let mut contents = Vec::new();
     file.read_to_end(&mut contents).expect("read_to_end");
 
-    std::fs::write("src/duckdb.wasm", contents).expect("Unable to write duckdb.wasm");
-
-    Ok(())
+    std::fs::write(format!("target/", inner_filename), contents).expect(format!("Unable to write {}", inner_filename));
 }
