@@ -1,7 +1,5 @@
 use std::fmt;
-use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
 #[derive(Debug)]
 #[repr(C)]
 pub enum DuckDBState {

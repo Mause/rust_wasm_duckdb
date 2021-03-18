@@ -9,11 +9,7 @@ which = "*"
 
 [dependencies]
 stdweb = "*"
-wasm-bindgen = "*"
-wasm-bindgen-futures = "*"
 js-sys = "*"
-wasm-timer = "*"
-console_error_panic_hook = "*"
 libc = "*"
 
 [dev-dependencies]
