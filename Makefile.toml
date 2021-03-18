@@ -2,7 +2,7 @@
 clear = true
 dependencies = ['prebuild']
 command = "cargo"
-args = ["web", "build", "--target", "wasm32-unknown-emscripten"]
+args = ["web", "build", "--target", "wasm32-unknown-emscripten", "--use-system-emscripten"]
 
 [tasks.prebuild]
 script_runner = "@rust"
