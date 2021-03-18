@@ -171,6 +171,9 @@ fn hook(info: &std::panic::PanicInfo) {
     println!("{}", msg);
 }
 
+/// Dummy __gxx_personality_v0 hook
+extern "C" fn ___gxx_personality_v0() {}
+
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::panic::set_hook(Box::new(hook));
 
