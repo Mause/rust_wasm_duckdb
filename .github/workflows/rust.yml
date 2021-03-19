@@ -48,3 +48,5 @@ jobs:
       with:
         command: make
         args: ci-flow
+      env:
+        EMMAKEN_CFLAGS: "-s ERROR_ON_UNDEFINED_SYMBOLS=0"
