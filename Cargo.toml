@@ -1,28 +1,19 @@
+[[bin]]
+name = "bin"
+path = "src/bin.rs"
+
 [build-dependencies]
 cc = {version= "*", features=['parallel']}
 shellexpand = "*"
 which = "*"
 
 [dependencies]
-wasm-bindgen = "*"
-wasm-bindgen-futures = "*"
+stdweb = "*"
 js-sys = "*"
-wasm-timer = "*"
-web-sys = {version="*",features = [
-  'Headers',
-  'Request',
-  'RequestInit',
-  'RequestMode',
-  'Response',
-  'Window',
-]}
-console_error_panic_hook = "*"
+libc = "*"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
-
-[lib]
-crate-type = ["cdylib", "rlib"]
 
 [package]
 name = "rust_wasm_duckdb"

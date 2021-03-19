@@ -1,13 +1,13 @@
 use std::fmt;
-use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
 #[derive(Debug)]
+#[repr(C)]
 pub enum DuckDBState {
     DuckDBSuccess = 0,
     DuckDBError = 1,
 }
 impl DuckDBState {
+    #[allow(dead_code)]
     fn is_success(&self) -> bool {
         matches!(self, DuckDBState::DuckDBSuccess)
     }

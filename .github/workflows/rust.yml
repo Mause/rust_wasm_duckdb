@@ -23,7 +23,20 @@ jobs:
         toolchain: nightly
         override: true
         components: rustfmt, clippy
-
+        target: wasm32-unknown-emscripten
+    - uses: Swatinem/rust-cache@v1
+    - name: Install rust script
+      uses: actions-rs/install@v0.1
+      with:
+        crate: rust-script
+        version: latest
+        use-tool-cache: true
+    - name: Install cargo web
+      uses: actions-rs/install@v0.1
+      with:
+        crate: cargo-web
+        version: latest
+        use-tool-cache: true
     - name: Install openssl
       run: |
         sudo apt update
@@ -36,3 +49,5 @@ jobs:
       with:
         command: make
         args: ci-flow
+      env:
+        EMMAKEN_CFLAGS: "-s ERROR_ON_UNDEFINED_SYMBOLS=0"
