@@ -103,6 +103,10 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let resolved: &DuckDBResult = &*query(s.as_ptr());
     println!("{:?}", resolved);
 
+    Ok(())
+}
+
+unsafe fn other() -> Result<(), Box<dyn std::error::Error>> {
     let database = malloc(PTR);
     duckdb_open(std::ptr::null(), database)?;
 
