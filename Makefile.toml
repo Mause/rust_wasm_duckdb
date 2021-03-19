@@ -14,4 +14,4 @@ script = { file = "setup.rs" }
 clear = true
 dependencies = ['build']
 command = "cargo"
-args = ["web", "test", "--target", "wasm32-unknown-emscripten", "--nodejs"]
+args = ["web", "test", "--target", "wasm32-unknown-emscripten", "--nodejs", "--use-system-emscripten"]
