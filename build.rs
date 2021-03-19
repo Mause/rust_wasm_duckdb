@@ -11,7 +11,8 @@ fn eat(command: &mut std::process::Command) {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("cargo:rustc-link-lib=static-nobundle=stdc++");
+    // TODO: reenable
+    // println!("cargo:rustc-link-lib=static-nobundle=stdc++");
 
     let emcc_path =
         which("em++").expect("Couldn't find em++, is the emscripten environment activated?");
