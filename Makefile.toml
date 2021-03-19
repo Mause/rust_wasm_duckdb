@@ -15,4 +15,4 @@ clear = true
 dependencies = ['build']
 command = "cargo"
 #args = ["web", "test"]
-args = ["test"]
+args = ["test", "--target", "wasm32-unknown-emscripten"]
