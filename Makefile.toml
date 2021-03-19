@@ -13,6 +13,8 @@ script = { file = "setup.rs" }
 [tasks.test]
 clear = true
 dependencies = ['build']
-command = "cargo"
+#command = "cargo"
 #args = ["web", "test"]
-args = ["test", "--target", "wasm32-unknown-emscripten"]
+#args = ["test", "--target", "wasm32-unknown-emscripten"]
+command = "node"
+args = ["target/wasm32-unknown-emscripten/debug/deps/bin-321978becccaaad9.js"]

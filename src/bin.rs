@@ -184,3 +184,8 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[test]
+fn it_works() {
+    assert_eq!(2 + 2, 4);
+}
