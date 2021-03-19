@@ -3,7 +3,7 @@ clear = true
 dependencies = ['prebuild']
 command = "cargo"
 # args = ["web", "build", "--target", "wasm32-unknown-emscripten", "--use-system-emscripten"]
-args = ["build", "--tests", "--target", "wasm32-unknown-emscripten", "--use-system-emscripten"]
+args = ["build", "--tests", "--target", "wasm32-unknown-emscripten"]
 
 [tasks.prebuild]
 condition = { files_not_exist = ["${CARGO_MAKE_WORKING_DIRECTORY}/target/duckdb.wasm", "${CARGO_MAKE_WORKING_DIRECTORY}/target/duckdb.hpp"] }
