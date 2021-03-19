@@ -3,7 +3,8 @@
 #![feature(static_nobundle)]
 
 use crate::state::DuckDBState;
-use libc::c_char;
+// use libc::c_char;
+pub type c_char = i8;
 use std::alloc::{alloc, Layout};
 use std::convert::TryInto;
 use std::ffi::CString;
