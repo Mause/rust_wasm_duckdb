@@ -11,6 +11,7 @@ env:
 
 jobs:
   deploy:
+    runs-on: ubuntu-latest
     depends: ['build']
     steps:
       - run: npm i -g vercel
