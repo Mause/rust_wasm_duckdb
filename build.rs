@@ -1,22 +1,6 @@
 #![feature(try_trait)]
 
-use which::which;
-
-fn eat(command: &mut std::process::Command) {
-    let res = command.output().expect("Compile");
-
-    if !res.status.success() {
-        panic!("{}", String::from_utf8(res.stderr).expect("String"));
-    }
-}
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // TODO: reenable
-    // println!("cargo:rustc-link-lib=static-nobundle=stdc++");
-
-    let emar_path =
-        which("emar").expect("Couldn't find emar, is the emscripten environment activated?");
-
     cc::Build::new()
         .flag("-fvisibility=default")
         .flag("-fPIC")
