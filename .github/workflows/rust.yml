@@ -50,4 +50,4 @@ jobs:
         command: make
         args: ci-flow
       env:
-        EMMAKEN_CFLAGS: "target/duckdb.wasm"
+        EMCC_CLOSURE_ARGS: "target/duckdb.wasm"
