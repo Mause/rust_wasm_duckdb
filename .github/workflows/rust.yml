@@ -10,6 +10,11 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  deploy:
+    depends: ['build']
+    steps:
+      - run: npm i -g vercel
+      - run: vercel
   build:
     runs-on: ubuntu-latest
     container:
