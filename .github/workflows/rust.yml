@@ -37,10 +37,6 @@ jobs:
         crate: cargo-web
         version: latest
         use-tool-cache: true
-    - name: Install openssl
-      run: |
-        sudo apt update
-        sudo apt-get install pkg-config build-essential libssl-dev --yes
     - uses: davidB/rust-cargo-make@v1
       with:
         version: latest
