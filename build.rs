@@ -14,13 +14,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // TODO: reenable
     // println!("cargo:rustc-link-lib=static-nobundle=stdc++");
 
-    let emcc_path =
-        which("em++").expect("Couldn't find em++, is the emscripten environment activated?");
-
     let emar_path =
         which("emar").expect("Couldn't find emar, is the emscripten environment activated?");
 
-    eat(std::process::Command::new(emcc_path)
+    eat(cc::Build::new()
+        .get_compiler()
+        .to_command()
         .arg("-fvisibility=default")
         .arg("-fPIC")
         .arg("-DDUCKDB_NO_THREADS=1")
@@ -47,13 +46,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     eat(std::process::Command::new(emar_path)
         .arg("rcs")
-        .arg("libduckdb.a")
+        .arg("target/libduckdb.a")
         .arg("duckdb.o"));
 
     println!("cargo:rustc-link-lib=static-nobundle=duckdb");
     println!(
         "cargo:rustc-link-search={}",
-        std::env::current_dir()?.to_str().expect("aaaaa")
+        std::env::current_dir()?
+            .join("target")
+            .to_str()
+            .expect("aaaaa")
     );
 
     Ok(())
