@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: '14'
       - run: npm i -g vercel
-      - run: vercel
+      - run: vercel --token ${{ secrets.VERCEL_TOKEN }}
   build:
     runs-on: ubuntu-latest
     container:
