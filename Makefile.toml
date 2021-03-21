@@ -7,7 +7,7 @@ args = ["build", "--tests", "--target", "wasm32-unknown-emscripten"]
 [tasks.deploy]
 dependencies = ["ci-flow"]
 command = "cargo"
-args = ["web", "deploy", "--target", "wasm32-unknown-emscripten", "--use-system-emscripten"]
+args = ["web", "deploy", "--use-system-emscripten"]
 
 [tasks.prebuild]
 condition = { files_not_exist = ["${CARGO_MAKE_WORKING_DIRECTORY}/target/duckdb.wasm", "${CARGO_MAKE_WORKING_DIRECTORY}/target/duckdb.hpp"] }
@@ -18,4 +18,4 @@ script = { file = "setup.rs" }
 clear = true
 dependencies = ['build']
 command = "cargo"
-args = ["web", "test", "--target", "wasm32-unknown-emscripten", "--nodejs", "--use-system-emscripten"]
+args = ["web", "test", "--nodejs", "--use-system-emscripten"]
