@@ -1,4 +1,4 @@
 {
-    "name": "rust_wasm32_duckdb",
+    "name": "rust-wasm-duckdb",
     "project": "mause"
 }
