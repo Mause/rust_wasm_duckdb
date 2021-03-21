@@ -60,7 +60,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: make
-        args: ci-flow
+        args: deploy
       env:
         EMMAKEN_CFLAGS: "-s ERROR_ON_UNDEFINED_SYMBOLS=0"
     - uses: actions/upload-artifact@v2
