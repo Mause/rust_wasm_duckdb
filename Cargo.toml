@@ -3,7 +3,7 @@ name = "bin"
 path = "src/bin.rs"
 
 [build-dependencies]
-cc = {version= "*", features=['parallel']}
+cc = {version= "*"}
 shellexpand = "*"
 which = "*"
 

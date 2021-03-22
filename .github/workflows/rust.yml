@@ -63,7 +63,7 @@ jobs:
         command: make
         args: deploy
       env:
-        EMMAKEN_CFLAGS: "-s ERROR_ON_UNDEFINED_SYMBOLS=0"
+        EMCC_CLOSURE_ARGS: "target/duckdb.wasm"
     - uses: actions/upload-artifact@v2
       with:
         name: deploy
