@@ -8,12 +8,6 @@ pub type c_char = i8;
 use std::alloc::{alloc, Layout};
 use std::convert::TryInto;
 use std::ffi::CString;
-use wasm_bindgen::prelude::*;
-
-#[wasm_bindgen(inline_js = "export function add(a, b) { return a + b; }")]
-extern "C" {
-    fn add(a: u32, b: u32) -> u32;
-}
 
 mod state;
 
@@ -98,18 +92,39 @@ fn malloc<T: Sized>(size: usize) -> *const T {
     unsafe { alloc(Layout::from_size_align(size, 8).expect("FUck")) as *const T }
 }
 
-macro_rules! console_log {
-    ($($t:tt)*) => (stdweb::console!(log, (&format_args!($($t)*).to_string())))
+static PTR: usize = core::mem::size_of::<i32>();
+
+extern "C" {
+    pub fn emscripten_asm_const_int(
+        code: *const u8,
+        sigPtr: *const u8,
+        argBuf: *const u8,
+    ) -> *mut u8;
 }
 
-static PTR: usize = core::mem::size_of::<i32>();
+fn call() -> i32 {
+    unsafe {
+        {
+            const SNIPPET: &'static [u8] = b"return 4+4\x00";
+
+            let sig = "\x00";
+
+            emscripten_asm_const_int(
+                SNIPPET as *const _ as *const u8,
+                sig as *const _ as *const u8,
+                std::ptr::null() as *const u8,
+            ) as i32
+        }
+    }
+}
 
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let s = CString::new("SELECT 1;").expect("string");
     let resolved: &DuckDBResult = &*query(s.as_ptr());
     println!("{:?}", resolved);
 
-    println!("{}", add(5, 6));
+    let res = call();
+    println!("{:?}", res);
 
     Ok(())
 }
@@ -138,10 +153,10 @@ unsafe fn other() -> Result<(), Box<dyn std::error::Error>> {
     for row_idx in 0..rl_res.row_count {
         for col_idx in 0..rl_res.column_count {
             let rval = duckdb_value_varchar(result, col_idx, row_idx);
-            console_log!("val: {:?}", rval);
+            // console_log!("val: {:?}", rval);
             // _emscripten_builtin_free(rval);
         }
-        console_log!("\n");
+        // console_log!("\n");
     }
     duckdb_destroy_result(result);
 
