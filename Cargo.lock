@@ -180,6 +180,7 @@ dependencies = [
  "libc",
  "shellexpand",
  "stdweb",
+ "wasm-bindgen",
  "wasm-bindgen-test",
  "which",
 ]
