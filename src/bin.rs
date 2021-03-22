@@ -8,6 +8,12 @@ pub type c_char = i8;
 use std::alloc::{alloc, Layout};
 use std::convert::TryInto;
 use std::ffi::CString;
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen(inline_js = "export function add(a, b) { return a + b; }")]
+extern "C" {
+    fn add(a: u32, b: u32) -> u32;
+}
 
 mod state;
 
@@ -102,6 +108,8 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let s = CString::new("SELECT 1;").expect("string");
     let resolved: &DuckDBResult = &*query(s.as_ptr());
     println!("{:?}", resolved);
+
+    println!("{}", add(5, 6));
 
     Ok(())
 }
