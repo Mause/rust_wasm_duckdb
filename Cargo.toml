@@ -10,7 +10,6 @@ which = "*"
 [dependencies]
 js-sys = "*"
 libc = "*"
-wasm-bindgen = "*"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"

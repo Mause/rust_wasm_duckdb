@@ -153,10 +153,10 @@ unsafe fn other() -> Result<(), Box<dyn std::error::Error>> {
     for row_idx in 0..rl_res.row_count {
         for col_idx in 0..rl_res.column_count {
             let rval = duckdb_value_varchar(result, col_idx, row_idx);
-            // console_log!("val: {:?}", rval);
+            println!("val: {:?}", rval);
             // _emscripten_builtin_free(rval);
         }
-        // console_log!("\n");
+        println!("\n");
     }
     duckdb_destroy_result(result);
 

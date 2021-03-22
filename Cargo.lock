@@ -161,7 +161,6 @@ dependencies = [
  "js-sys",
  "libc",
  "shellexpand",
- "wasm-bindgen",
  "wasm-bindgen-test",
  "which",
 ]
