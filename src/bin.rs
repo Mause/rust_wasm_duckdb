@@ -212,6 +212,23 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn setup_test() {
+    const SNIPPET: &'static [u8] = b"global.document = {body: {}};\x00";
+
+    let sig = "\x00";
+
+    unsafe {
+        emscripten_asm_const_int(
+            SNIPPET as *const _ as *const u8,
+            sig as *const _ as *const u8,
+            std::ptr::null() as *const _ as *const u8,
+        );
+    }
+}
+
+#[test]
 fn it_works() {
+    setup_test();
+
     main().unwrap();
 }
