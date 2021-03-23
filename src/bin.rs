@@ -102,19 +102,18 @@ extern "C" {
     ) -> *mut u8;
 }
 
-fn call() -> i32 {
+fn call(input: i32) -> i32 {
+    const SNIPPET: &'static [u8] =
+        b"let i = arguments[0]; document.body.innerText = i; return i;\x00";
+
+    let sig = "i\x00";
+
     unsafe {
-        {
-            const SNIPPET: &'static [u8] = b"return 4+4\x00";
-
-            let sig = "\x00";
-
-            emscripten_asm_const_int(
-                SNIPPET as *const _ as *const u8,
-                sig as *const _ as *const u8,
-                std::ptr::null() as *const u8,
-            ) as i32
-        }
+        emscripten_asm_const_int(
+            SNIPPET as *const _ as *const u8,
+            sig as *const _ as *const u8,
+            &[input] as *const _ as *const u8,
+        ) as i32
     }
 }
 
@@ -123,7 +122,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let resolved: &DuckDBResult = &*query(s.as_ptr());
     println!("{:?}", resolved);
 
-    let res = call();
+    let res = call(42);
     println!("{:?}", res);
 
     Ok(())
