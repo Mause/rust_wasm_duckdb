@@ -2,7 +2,8 @@
 #include "duckdb.hpp"
 #include <iostream>
 
-static duckdb_state duckdb_translate_result(void *result, duckdb_result *out);
+struct MaterializedQueryResult {}
+static duckdb_state duckdb_translate_result(MaterializedQueryResult *result, duckdb_result *out);
 
 extern "C"
 {
