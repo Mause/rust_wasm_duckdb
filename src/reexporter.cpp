@@ -11,6 +11,8 @@ extern "C"
 
         duckdb_result *out = (duckdb_result *)malloc(sizeof(duckdb_result *));
 
-        return duckdb_query(con, query, out);
+        duckdb_query(con, query, out);
+
+        return out;
     }
 }
