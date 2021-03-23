@@ -15,10 +15,7 @@ extern "C"
         out->error_message = nullptr;
         if (result->success)
         {
-            out->column_count = result->types.size();
-            out->row_count = result->collection.Count();
-            // out->columns = (duckdb_column *)calloc(sizeof(duckdb_column), out->column_count);
-            // std::cerr << out->columns << std::endl;
+            duckdb_translate_result(result.get(), out);
         }
         else
         {
