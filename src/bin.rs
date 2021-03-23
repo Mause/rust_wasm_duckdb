@@ -126,7 +126,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     
     let res = duckdb_value_int32(resolved, 0, 0);
 
-    println!("{:?}", call(42));
+    println!("{:?}", call(res));
 
     Ok(())
 }
