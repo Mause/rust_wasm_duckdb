@@ -85,6 +85,7 @@ extern "C" {
 
     fn duckdb_value_varchar(result: *const DuckDBResult, row: i64, column: i64) -> *const c_char;
     fn duckdb_value_int8(result: *const DuckDBResult, col: i64, row: i64) -> i8;
+    fn duckdb_value_int32(result: *const DuckDBResult, col: i64, row: i64) -> i32;
 
     fn query(query: *const c_char) -> *mut DuckDBResult;
 }
@@ -122,9 +123,10 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let s = CString::new("SELECT 1;").expect("string");
     let resolved: &DuckDBResult = &*query(s.as_ptr());
     println!("{:?}", resolved);
+    
+    let res = duckdb_value_int32(resolved, 0, 0);
 
-    let res = call(42);
-    println!("{:?}", res);
+    println!("{:?}", call(res));
 
     Ok(())
 }
