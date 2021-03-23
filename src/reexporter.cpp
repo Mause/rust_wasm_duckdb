@@ -2,6 +2,8 @@
 #include "duckdb.hpp"
 #include <iostream>
 
+static duckdb_state duckdb_translate_result(MaterializedQueryResult *result, duckdb_result *out);
+
 extern "C"
 {
     duckdb_result *query(const char *query)
