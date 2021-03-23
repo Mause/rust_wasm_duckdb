@@ -92,16 +92,38 @@ fn malloc<T: Sized>(size: usize) -> *const T {
     unsafe { alloc(Layout::from_size_align(size, 8).expect("FUck")) as *const T }
 }
 
-macro_rules! console_log {
-    ($($t:tt)*) => (stdweb::console!(log, (&format_args!($($t)*).to_string())))
+static PTR: usize = core::mem::size_of::<i32>();
+
+extern "C" {
+    pub fn emscripten_asm_const_int(
+        code: *const u8,
+        sigPtr: *const u8,
+        argBuf: *const u8,
+    ) -> *mut u8;
 }
 
-static PTR: usize = core::mem::size_of::<i32>();
+fn call(input: i32) -> i32 {
+    const SNIPPET: &'static [u8] =
+        b"let i = arguments[0]; document.body.innerText = i; return i;\x00";
+
+    let sig = "i\x00";
+
+    unsafe {
+        emscripten_asm_const_int(
+            SNIPPET as *const _ as *const u8,
+            sig as *const _ as *const u8,
+            &[input] as *const _ as *const u8,
+        ) as i32
+    }
+}
 
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let s = CString::new("SELECT 1;").expect("string");
     let resolved: &DuckDBResult = &*query(s.as_ptr());
     println!("{:?}", resolved);
+
+    let res = call(42);
+    println!("{:?}", res);
 
     Ok(())
 }
@@ -130,10 +152,10 @@ unsafe fn other() -> Result<(), Box<dyn std::error::Error>> {
     for row_idx in 0..rl_res.row_count {
         for col_idx in 0..rl_res.column_count {
             let rval = duckdb_value_varchar(result, col_idx, row_idx);
-            console_log!("val: {:?}", rval);
+            println!("val: {:?}", rval);
             // _emscripten_builtin_free(rval);
         }
-        console_log!("\n");
+        println!("\n");
     }
     duckdb_destroy_result(result);
 
@@ -190,6 +212,23 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn setup_test() {
+    const SNIPPET: &'static [u8] = b"global.document = {body: {}};\x00";
+
+    let sig = "\x00";
+
+    unsafe {
+        emscripten_asm_const_int(
+            SNIPPET as *const _ as *const u8,
+            sig as *const _ as *const u8,
+            std::ptr::null() as *const _ as *const u8,
+        );
+    }
+}
+
+#[test]
 fn it_works() {
+    setup_test();
+
     main().unwrap();
 }
