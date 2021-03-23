@@ -84,6 +84,7 @@ extern "C" {
     fn duckdb_destroy_result(result: *const DuckDBResult);
 
     fn duckdb_value_varchar(result: *const DuckDBResult, row: i64, column: i64) -> *const c_char;
+    fn duckdb_value_int8(result: *const DuckDBResult, col: i64, row: i64) -> i8;
 
     fn query(query: *const c_char) -> *mut DuckDBResult;
 }
