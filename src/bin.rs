@@ -136,17 +136,23 @@ extern "C" {
     ) -> *mut u8;
 }
 
-fn call(input: i32) -> i32 {
+#[repr(C, align(16))]
+struct AlignToSixteen([i32; 1]);
+
+fn call(string: String) -> i32 {
     const SNIPPET: &'static [u8] =
         b"let i = arguments[0]; document.body.innerText = UTF8ToString(i, 1000); return i;\x00";
 
     let sig = "i\x00";
 
+    let cstring = CString::new(string).expect("string");
+    let input = cstring.as_ptr() as *const _ as i32;
+
     unsafe {
         emscripten_asm_const_int(
             SNIPPET as *const _ as *const u8,
             sig as *const _ as *const u8,
-            &[input] as *const _ as *const u8,
+            &AlignToSixteen([input]) as *const _ as *const u8,
         ) as i32
     }
 }
@@ -185,8 +191,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
                 std::ffi::CStr::from_ptr(column.name)
             );
             println!("{}", string);
-            let cstring = CString::new(string)?;
-            call(cstring.as_ptr() as *const _ as i32);
+            call(string);
         }
         println!("\n");
     }
