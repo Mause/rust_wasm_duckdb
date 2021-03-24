@@ -160,7 +160,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let resolved: &DuckDBResult = &*query(database, s.as_ptr());
     println!("result: {:?}", resolved);
 
-    let length = resolved.column_count.try_into().unwrap();
+    let length = resolved.column_count.try_into()?;
     let columns: Vec<DuckDBColumn> = Vec::from_raw_parts(resolved.columns, length, length);
 
     println!("columns: {:?}", columns);
@@ -169,8 +169,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
         for col_idx in 0..resolved.column_count {
             let rval = duckdb_value_int32(resolved, col_idx, row_idx);
 
-            let column: &DuckDBColumn =
-                &columns[<usize as TryFrom<i64>>::try_from(col_idx).unwrap()];
+            let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col_idx)?];
 
             let string = format!(
                 "val: {:?} {:?} {:?}",
@@ -179,7 +178,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
                 std::ffi::CStr::from_ptr(column.name)
             );
             println!("{}", string);
-            let cstring = CString::new(string).unwrap();
+            let cstring = CString::new(string)?;
             call(cstring.as_ptr() as *const _ as i32);
         }
         println!("\n");
