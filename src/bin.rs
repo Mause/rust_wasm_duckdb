@@ -137,7 +137,7 @@ extern "C" {
 
 fn call(input: i32) -> i32 {
     const SNIPPET: &'static [u8] =
-        b"let i = arguments[0]; document.body.innerText = i; return i;\x00";
+        b"let i = arguments[0]; document.body.innerText = UTF8ToString(i, 1000); return i;\x00";
 
     let sig = "i\x00";
 
@@ -158,11 +158,36 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     let s = CString::new("SELECT 42").expect("string");
     let resolved: &DuckDBResult = &*query(database, s.as_ptr());
-    println!("{:?}", resolved);
+    println!("result: {:?}", resolved);
 
-    let res = duckdb_value_int32(resolved, 0, 0);
+    let length = resolved.column_count.try_into().unwrap();
+    let columns: Vec<DuckDBColumn> = Vec::from_raw_parts(resolved.columns, length, length);
 
-    println!("{:?}", call(res));
+    println!("columns: {:?}", columns);
+
+    for row_idx in 0..resolved.row_count {
+        for col_idx in 0..resolved.column_count {
+            let rval = duckdb_value_int32(resolved, col_idx, row_idx);
+
+            let column: &DuckDBColumn =
+                &columns[<usize as TryFrom<i64>>::try_from(col_idx).unwrap()];
+
+            let string = format!(
+                "val: {:?} {:?} {:?}",
+                column,
+                rval,
+                std::ffi::CStr::from_ptr(column.name)
+            );
+            println!("{}", string);
+            let cstring = CString::new(string).unwrap();
+            call(cstring.as_ptr() as *const _ as i32);
+        }
+        println!("\n");
+    }
+
+    duckdb_destroy_result(resolved);
+
+    duckdb_close(database);
 
     Ok(())
 }
