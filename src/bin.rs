@@ -3,10 +3,10 @@
 #![feature(static_nobundle)]
 
 use crate::state::DuckDBState;
-// use libc::c_char;
+use libc::c_void;
 pub type c_char = i8;
 use std::alloc::{alloc, Layout};
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 use std::ffi::CString;
 
 mod state;
@@ -66,6 +66,13 @@ struct DuckDBResult {
     error_message: *const c_char,
 }
 
+#[repr(C)]
+#[derive(Debug)]
+struct DuckDBBlob {
+    data: *const c_void,
+    size: i64,
+}
+
 extern "C" {
     fn duckdb_open(path: *const c_char, database: *const Database) -> DuckDBState;
 
@@ -83,9 +90,33 @@ extern "C" {
 
     fn duckdb_destroy_result(result: *const DuckDBResult);
 
-    fn duckdb_value_varchar(result: *const DuckDBResult, row: i64, column: i64) -> *const c_char;
+    /// Converts the specified value to a bool. Returns false on failure or NULL.
+    fn duckdb_value_boolean(result: *const DuckDBResult, col: i64, row: i64) -> bool;
+    /// Converts the specified value to an int8_t. Returns 0 on failure or NULL.
     fn duckdb_value_int8(result: *const DuckDBResult, col: i64, row: i64) -> i8;
+    /// Converts the specified value to an int16_t. Returns 0 on failure or NULL.
+    fn duckdb_value_int16(result: *const DuckDBResult, col: i64, row: i64) -> i16;
+    /// Converts the specified value to an int64_t. Returns 0 on failure or NULL.
     fn duckdb_value_int32(result: *const DuckDBResult, col: i64, row: i64) -> i32;
+    /// Converts the specified value to an int64_t. Returns 0 on failure or NULL.
+    fn duckdb_value_int64(result: *const DuckDBResult, col: i64, row: i64) -> i64;
+    /// Converts the specified value to an uint8_t. Returns 0 on failure or NULL.
+    fn duckdb_value_uint8(result: *const DuckDBResult, col: i64, row: i64) -> u8;
+    /// Converts the specified value to an uint16_t. Returns 0 on failure or NULL.
+    fn duckdb_value_uint16(result: *const DuckDBResult, col: i64, row: i64) -> u16;
+    /// Converts the specified value to an uint64_t. Returns 0 on failure or NULL.
+    fn duckdb_value_uint32(result: *const DuckDBResult, col: i64, row: i64) -> u32;
+    /// Converts the specified value to an uint64_t. Returns 0 on failure or NULL.
+    fn duckdb_value_uint64(result: *const DuckDBResult, col: i64, row: i64) -> u64;
+    /// Converts the specified value to a float. Returns 0.0 on failure or NULL.
+    // fn duckdb_value_float(result: *const DuckDBResult, col: i64, row: i64) -> float;
+    /// Converts the specified value to a double. Returns 0.0 on failure or NULL.
+    // fn duckdb_value_double(result: *const DuckDBResult, col: i64, row: i64) -> double;
+    /// Converts the specified value to a string. Returns nullptr on failure or NULL. The result must be freed with free.
+    fn duckdb_value_varchar(result: *const DuckDBResult, col: i64, row: i64) -> *const c_char;
+    /// Fetches a blob from a result set column. Returns a blob with blob.data set to nullptr on failure or NULL. The
+    /// resulting "blob.data" must be freed with free.
+    fn duckdb_value_blob(result: *const DuckDBResult, col: i64, row: i64) -> *const DuckDBBlob;
 
     fn query(db: *const Database, query: *const c_char) -> *mut DuckDBResult;
 }
@@ -106,7 +137,7 @@ extern "C" {
 
 fn call(input: i32) -> i32 {
     const SNIPPET: &'static [u8] =
-        b"let i = arguments[0]; document.body.innerText = i; return i;\x00";
+        b"let i = arguments[0]; document.body.innerText = UTF8ToString(i, 1000); return i;\x00";
 
     let sig = "i\x00";
 
@@ -127,11 +158,35 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     let s = CString::new("SELECT 42").expect("string");
     let resolved: &DuckDBResult = &*query(database, s.as_ptr());
-    println!("{:?}", resolved);
+    println!("result: {:?}", resolved);
 
-    let res = duckdb_value_int32(resolved, 0, 0);
+    let length = resolved.column_count.try_into()?;
+    let columns: Vec<DuckDBColumn> = Vec::from_raw_parts(resolved.columns, length, length);
 
-    println!("{:?}", call(res));
+    println!("columns: {:?}", columns);
+
+    for row_idx in 0..resolved.row_count {
+        for col_idx in 0..resolved.column_count {
+            let rval = duckdb_value_int32(resolved, col_idx, row_idx);
+
+            let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col_idx)?];
+
+            let string = format!(
+                "val: {:?} {:?} {:?}",
+                column,
+                rval,
+                std::ffi::CStr::from_ptr(column.name)
+            );
+            println!("{}", string);
+            let cstring = CString::new(string)?;
+            call(cstring.as_ptr() as *const _ as i32);
+        }
+        println!("\n");
+    }
+
+    duckdb_destroy_result(resolved);
+
+    duckdb_close(database);
 
     Ok(())
 }
