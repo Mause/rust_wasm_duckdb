@@ -348,14 +348,14 @@ idx_t GetCTypeSize(duckdb_type type)
 }
 extern "C"
 {
-    duckdb_result *query(DatabaseData *db, const char *query)
+    duckdb_result *query(DatabaseData *db, const char *query, duckdb_result *out)
     {
         duckdb::Connection con(*db->database);
 
         auto res = con.Query(query);
 
-        duckdb_result *out = (duckdb_result *)malloc(sizeof(duckdb_result *));
         duckdb_translate_result(res.get(), out);
+
         return out;
     }
 }

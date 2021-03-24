@@ -118,7 +118,11 @@ extern "C" {
     /// resulting "blob.data" must be freed with free.
     fn duckdb_value_blob(result: *const DuckDBResult, col: i64, row: i64) -> *const DuckDBBlob;
 
-    fn query(db: *const Database, query: *const c_char) -> *mut DuckDBResult;
+    fn query(
+        db: *const Database,
+        query: *const c_char,
+        result: *const DuckDBResult,
+    ) -> *mut DuckDBResult;
 }
 
 fn malloc<T: Sized>(size: usize) -> *const T {
@@ -157,7 +161,11 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     println!("DB open");
 
     let s = CString::new("SELECT 42").expect("string");
-    let resolved: &DuckDBResult = &*query(database, s.as_ptr());
+
+    let result = malloc(PTR);
+    query(database, s.as_ptr(), result);
+    let resolved = &*result;
+
     println!("result: {:?}", resolved);
 
     let length = resolved.column_count.try_into()?;
@@ -167,7 +175,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     for row_idx in 0..resolved.row_count {
         for col_idx in 0..resolved.column_count {
-            let rval = duckdb_value_int32(resolved, col_idx, row_idx);
+            let rval = duckdb_value_int32(result, col_idx, row_idx);
 
             let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col_idx)?];
 
@@ -184,7 +192,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
         println!("\n");
     }
 
-    duckdb_destroy_result(resolved);
+    duckdb_destroy_result(result);
 
     duckdb_close(database);
 
