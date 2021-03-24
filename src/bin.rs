@@ -118,11 +118,8 @@ extern "C" {
     /// resulting "blob.data" must be freed with free.
     fn duckdb_value_blob(result: *const DuckDBResult, col: i64, row: i64) -> *const DuckDBBlob;
 
-    fn query(
-        db: *const Database,
-        query: *const c_char,
-        result: *const DuckDBResult,
-    ) -> *mut DuckDBResult;
+    fn query(db: *const Database, query: *const c_char, result: *const DuckDBResult)
+        -> DuckDBState;
 }
 
 fn malloc<T: Sized>(size: usize) -> *const T {
@@ -163,7 +160,9 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let s = CString::new("SELECT 42").expect("string");
 
     let result = malloc(PTR);
-    query(database, s.as_ptr(), result);
+    let status = query(database, s.as_ptr(), result);
+    println!("status: {}", status);
+    status?;
     let resolved = &*result;
 
     println!("result: {:?}", resolved);
