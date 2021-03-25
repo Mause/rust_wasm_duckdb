@@ -186,7 +186,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
             let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col_idx)?];
 
             let string = format!(
-                "val: {:?} {:?} {:?}",
+                "<pre>val: {:?}\nvalue:{:?}\nname:{:?}</pre>",
                 column,
                 rval,
                 std::ffi::CStr::from_ptr(column.name)
