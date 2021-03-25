@@ -29,7 +29,7 @@ jobs:
       - run: vercel link --confirm --token ${{ secrets.VERCEL_TOKEN }}
       - if: ${{ env.PROD_DEPLOY == false }}
         run: vercel deploy . --token ${{ secrets.VERCEL_TOKEN }}
-      - if: ${{ env.PROD_DEPLOY }}
+      - if: ${{ env.PROD_DEPLOY == true }}
         run: vercel deploy . --token ${{ secrets.VERCEL_TOKEN }} --prod
 
   build:
