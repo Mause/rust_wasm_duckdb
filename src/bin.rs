@@ -141,7 +141,7 @@ struct AlignToSixteen([i32; 1]);
 
 fn call(string: String) -> i32 {
     const SNIPPET: &'static [u8] =
-        b"let i = arguments[0]; document.body.innerText = UTF8ToString(i, 1000); return i;\x00";
+        b"let i = arguments[0]; document.body.innerHTML = UTF8ToString(i, 1000); return i;\x00";
 
     let sig = "i\x00";
 
@@ -186,7 +186,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
             let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col_idx)?];
 
             let string = format!(
-                "<pre>val: {:?}\nvalue:{:?}\nname:{:?}</pre>",
+                "<pre>val: {:?}\nvalue: {:?}\nname: {:?}</pre>",
                 column,
                 rval,
                 std::ffi::CStr::from_ptr(column.name)
