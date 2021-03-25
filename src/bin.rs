@@ -159,7 +159,8 @@ fn call(string: String) -> i32 {
 
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let database = malloc(PTR);
-    duckdb_open(std::ptr::null(), database)?;
+    let path = CString::new("db.db").unwrap();
+    duckdb_open(path.as_ptr(), database)?;
 
     println!("DB open");
 
