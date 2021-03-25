@@ -23,6 +23,10 @@ jobs:
       - run: npm i -g vercel
       - run: vercel link --confirm --token ${{ secrets.VERCEL_TOKEN }}
       - run: vercel deploy . --token ${{ secrets.VERCEL_TOKEN }}
+        if: github.event_name == 'pull_request_target'
+      - run: vercel deploy . --token ${{ secrets.VERCEL_TOKEN }} --prod
+        if: github.event_name == 'push'
+
   build:
     runs-on: ubuntu-latest
     container:
