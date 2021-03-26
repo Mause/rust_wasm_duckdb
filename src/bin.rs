@@ -179,7 +179,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("columns: {:?}", columns);
     
-    let string = "<table><thead><td>val</td><td>value</td><td>name</td></thead><tbody>";
+    let string = String::from("<table><thead><td>val</td><td>value</td><td>name</td></thead><tbody>");
 
     for row_idx in 0..resolved.row_count {
         for col_idx in 0..resolved.column_count {
@@ -187,7 +187,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
             let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col_idx)?];
 
-            total += format!(
+            string += format!(
                 "<tr><td>{:?}</td><td>{:?}</td><td>{:?}</td></tr>",
                 column,
                 rval,
