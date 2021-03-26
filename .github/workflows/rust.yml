@@ -38,11 +38,16 @@ jobs:
     - name: Install latest nightly
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly
+        toolchain: nightly-2021-03-25
         override: true
         components: rustfmt, clippy
         target: wasm32-unknown-emscripten
-    - uses: Swatinem/rust-cache@v1
+    - name: Cache Primes
+      id: cache-primes
+      uses: actions/cache@v2
+      with:
+        path: ~/.cargo
+        key: ${{ runner.os }}-${{ hashFiles('Cargo**') }}
     - name: Install rust script
       uses: actions-rs/install@v0.1
       with:
