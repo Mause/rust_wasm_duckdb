@@ -164,7 +164,8 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("DB open");
 
-    let s = CString::new("SELECT 11111").expect("string");
+    let s = CString::new("SELECT 1111").expect("string");
+    let another_one = CString::new("SELECT 11111").expect("string");
 
     let result = malloc(PTR);
     let status = query(database, s.as_ptr(), result);
