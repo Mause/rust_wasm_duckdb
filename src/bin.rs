@@ -180,8 +180,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     println!("columns: {:?}", columns);
     
     let mut string = String::from(
-        "<link rel=\"stylesheet\" href=\"writ.min.css\">
-        <table>
+        "<table>
         <thead>
         <td>val</td>
         <td>value</td>
