@@ -179,7 +179,15 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("columns: {:?}", columns);
     
-    let mut string = String::from("<table><thead><td>val</td><td>value</td><td>name</td></thead><tbody>");
+    let mut string = String::from(
+        "<link rel=\"stylesheet\" href=\"writ.min.css\">
+        <table>
+        <thead>
+        <td>val</td>
+        <td>value</td>
+        <td>name</td>
+        </thead>
+        <tbody>");
 
     for row_idx in 0..resolved.row_count {
         for col_idx in 0..resolved.column_count {
