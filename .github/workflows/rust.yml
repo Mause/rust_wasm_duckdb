@@ -22,10 +22,6 @@ jobs:
         with:
           node-version: '14'
       - run: npm i -g vercel
-      - run: |
-          echo ${{ github.ref }}
-          echo ${{ env.PROD_DEPLOY }}
-          echo ${{ github.head_ref }}
       - run: vercel link --confirm --token ${{ secrets.VERCEL_TOKEN }}
       - if: ${{ env.PROD_DEPLOY == 'false' }}
         run: vercel deploy . --token ${{ secrets.VERCEL_TOKEN }}
