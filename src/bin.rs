@@ -192,7 +192,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
                 column,
                 rval,
                 std::ffi::CStr::from_ptr(column.name)
-            );
+            ).as_str();
         }
         println!("\n");
     }
