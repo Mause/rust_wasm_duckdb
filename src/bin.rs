@@ -194,7 +194,6 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
                 std::ffi::CStr::from_ptr(column.name)
             ).as_str();
         }
-        println!("\n");
     }
 
     string += "</tbody></table>";
