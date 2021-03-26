@@ -179,30 +179,25 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("columns: {:?}", columns);
     
-    let mut string = String::from(
-        "<table>
-        <thead>
-        <td>val</td>
-        <td>value</td>
-        <td>name</td>
-        </thead>
-        <tbody>");
+    let mut string = String::from("<table><thead>");
+
+    for col_idx in 0..resolved.column_count {
+        let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col_idx)?];
+        
+        string += format!("<td>{:?}: {:?}</td>", std::ffi::CStr::from_ptr(column.name), column.type_).as_str();
+    }
+
+    string += "</thead><tbody>";
 
     for row_idx in 0..resolved.row_count {
+        string += "<tr>";
         for col_idx in 0..resolved.column_count {
             let rval = duckdb_value_int32(result, col_idx, row_idx);
 
-            let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col_idx)?];
-
-            string += format!(
-                "<tr><td>{:?}</td><td>{:?}</td><td>{:?}</td></tr>",
-                column,
-                rval,
-                std::ffi::CStr::from_ptr(column.name)
-            ).as_str();
+            string += format!("<td>{:?}</td>", rval).as_str();
         }
+        string += "</tr>";
     }
-
     string += "</tbody></table>";
     
     println!("{}", string);
