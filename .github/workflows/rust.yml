@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  PROD_DEPLOY: ${{ github.event_name == 'push' && github.head_ref == 'main' }}
 
 jobs:
   deploy:
@@ -22,7 +23,11 @@ jobs:
           node-version: '14'
       - run: npm i -g vercel
       - run: vercel link --confirm --token ${{ secrets.VERCEL_TOKEN }}
-      - run: vercel deploy . --token ${{ secrets.VERCEL_TOKEN }}
+      - if: ${{ env.PROD_DEPLOY == 'false' }}
+        run: vercel deploy . --token ${{ secrets.VERCEL_TOKEN }}
+      - if: ${{ env.PROD_DEPLOY == 'true' }}
+        run: vercel deploy . --token ${{ secrets.VERCEL_TOKEN }} --prod
+
   build:
     runs-on: ubuntu-latest
     container:
