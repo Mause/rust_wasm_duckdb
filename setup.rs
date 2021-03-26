@@ -23,6 +23,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     std::fs::create_dir_all("target")?;
 
+    println!("Latest release: {}", &release.tag_name);
     tokio::try_join!(
         from_file(&release, "libduckdb-src.zip", "duckdb.hpp"),
         from_file(&release, "duckdb-wasm32-nothreads.zip", "duckdb.wasm")
