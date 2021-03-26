@@ -164,7 +164,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("DB open");
 
-    let s = CString::new("SELECT 42").expect("string");
+    let s = CString::new("SELECT 42, random()").expect("string");
 
     let result = malloc(PTR);
     let status = query(database, s.as_ptr(), result);
@@ -178,6 +178,8 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let columns: Vec<DuckDBColumn> = Vec::from_raw_parts(resolved.columns, length, length);
 
     println!("columns: {:?}", columns);
+    
+    let string = "<table><thead><td>val</td><td>value</td><td>name</td></thead><tbody>";
 
     for row_idx in 0..resolved.row_count {
         for col_idx in 0..resolved.column_count {
@@ -185,17 +187,20 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
             let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col_idx)?];
 
-            let string = format!(
-                "<pre>val: {:?}\nvalue: {:?}\nname: {:?}</pre>",
+            total += format!(
+                "<tr><td>{:?}</td><td>{:?}</td><td>{:?}</td></tr>",
                 column,
                 rval,
                 std::ffi::CStr::from_ptr(column.name)
             );
-            println!("{}", string);
-            call(string);
         }
         println!("\n");
     }
+
+    string += "</tbody></table>";
+    
+    println!("{}", string);
+    call(string);
 
     duckdb_destroy_result(result);
 
