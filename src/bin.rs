@@ -178,13 +178,18 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let columns: Vec<DuckDBColumn> = Vec::from_raw_parts(resolved.columns, length, length);
 
     println!("columns: {:?}", columns);
-    
+
     let mut string = String::from("<table><thead>");
 
     for col_idx in 0..resolved.column_count {
         let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col_idx)?];
-        
-        string += format!("<td>{}: {:?}</td>", std::ffi::CStr::from_ptr(column.name), column.type_).as_str();
+
+        string += format!(
+            "<td>{}: {:?}</td>",
+            std::ffi::CStr::from_ptr(column.name).to_string_lossy(),
+            column.type_
+        )
+        .as_str();
     }
 
     string += "</thead><tbody>";
@@ -199,7 +204,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
         string += "</tr>";
     }
     string += "</tbody></table>";
-    
+
     println!("{}", string);
     call(string);
 
