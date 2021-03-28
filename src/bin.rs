@@ -59,8 +59,8 @@ impl ToString for DbType {
             Integer(i) => i.to_string(),
             Float(f) => f.to_string(),
             Double(f) => f.to_string(),
-            String(s) => s,
-            Unknown(s) => s,
+            String(s) => s.to_string(),
+            Unknown(s) => s.to_string(),
         }
     }
 }
