@@ -368,17 +368,7 @@ speculate! {
     before {
         std::panic::set_hook(Box::new(hook));
 
-        const SNIPPET: &'static [u8] = b"global.document = {body: {}};\x00";
-
-        let sig = "\x00";
-
-        unsafe {
-            emscripten_asm_const_int(
-                SNIPPET as *const _ as *const u8,
-                sig as *const _ as *const u8,
-                std::ptr::null() as *const _ as *const u8,
-            );
-        }
+        jse!(b"global.document = {body: {}};\x00", 0);
     }
 
     test "works" {
