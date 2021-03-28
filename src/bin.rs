@@ -45,6 +45,10 @@ pub enum DuckDBType {
     DuckDBTypeBlob = 14,
 }
 
+enum DbType {
+    I32(i32),
+}
+
 #[repr(C)]
 #[derive(Debug)]
 struct DuckDBColumn {
