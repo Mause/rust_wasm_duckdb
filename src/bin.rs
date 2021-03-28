@@ -175,22 +175,42 @@ static PTR: usize = core::mem::size_of::<i32>();
 #[repr(C, align(16))]
 struct AlignToSixteen([i32; 1]);
 
-fn call(string: String) -> i32 {
-    const SNIPPET: &'static [u8] =
-        b"let i = arguments[0]; document.body.innerHTML = UTF8ToString(i, 1000); return i;\x00";
+macro_rules! jse {
+    ($js_expr:expr, $( $i:ident ),*) => {
+        {
+            let array = &AlignToSixteen([$($i)*, ]);
+            let sig = CString::new("i".repeat(array.0.len())).expect("sig");
+            const SNIPPET: &'static [u8] = $js_expr;
 
-    let sig = "i\x00";
+            unsafe {
+                emscripten_asm_const_int(
+                    SNIPPET as *const _ as *const u8,
+                    sig.as_ptr() as *const _ as *const u8,
+                    array as *const _ as *const u8,
+                ) as i32
+            }
+        }
+    };
+}
 
+fn set_body_html(string: String) -> i32 {
     let cstring = CString::new(string).expect("string");
     let input = cstring.as_ptr() as *const _ as i32;
 
-    unsafe {
-        emscripten_asm_const_int(
-            SNIPPET as *const _ as *const u8,
-            sig as *const _ as *const u8,
-            &AlignToSixteen([input]) as *const _ as *const u8,
-        ) as i32
-    }
+    jse!(
+        b"let i = arguments[0]; document.body.innerHTML = UTF8ToString(i, 1000); return i;\x00",
+        input
+    )
+}
+
+fn set_page_title(string: String) -> i32 {
+    let cstring = CString::new(string).expect("string");
+    let input = cstring.as_ptr() as *const _ as i32;
+
+    jse!(
+        b"let i = arguments[0]; document.title = UTF8ToString(i, 1000); return i;\x00",
+        input
+    )
 }
 
 struct ResolvedResult<'a> {
@@ -240,6 +260,8 @@ impl<'a> ResolvedResult<'a> {
 }
 
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
+    set_page_title("DuckDB Test".to_string());
+
     let database = malloc(PTR);
     let path = CString::new("db.db").unwrap();
     duckdb_open(path.as_ptr(), database)?;
@@ -284,7 +306,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     string += "</tbody></table>";
 
     println!("{}", string);
-    call(string);
+    set_body_html(string);
 
     duckdb_destroy_result(result);
 
@@ -309,11 +331,11 @@ fn hook(info: &std::panic::PanicInfo) {
     // the message's contents, by including the stack in the message
     // contents we make sure it is available to the user.
     msg.push_str("\n\nStack:\n\n");
-    #[cfg(not(test))]
-    {
-        let error = js_sys::Error::new("test1");
-        println!("{:?}", error);
-    }
+    // #[cfg(not(test))]
+    // {
+    //     let error = js_sys::Error::new("test1");
+    //     println!("{:?}", error);
+    // }
     // let stack = error.stack();
     // println!("{:?}", stack);
     // msg.push_str(stack.as_str().unwrap_or_default());
