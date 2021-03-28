@@ -53,17 +53,10 @@ jobs:
         path: ~/.cargo
         key: ${{ runner.os }}-${{ hashFiles('Cargo**') }}
     - name: Install rust script
-      uses: actions-rs/install@v0.1
+      uses: actions-rs/cargo@v1
       with:
-        crate: rust-script
-        version: latest
-        use-tool-cache: true
-    - name: Install cargo web
-      uses: actions-rs/install@v0.1
-      with:
-        crate: cargo-web
-        version: latest
-          #use-tool-cache: true
+        command: install
+        args: rust-script cargo-web
     - name: Install openssl
       run: |
         sudo apt update
