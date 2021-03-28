@@ -266,7 +266,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
         string += format!(
             "<td>{}: {:?}</td>",
-            std::ffi::CStr::from_ptr(column.name).to_string_lossy(),
+            CStr::from_ptr(column.name).to_string_lossy(),
             column.type_
         )
         .as_str();
