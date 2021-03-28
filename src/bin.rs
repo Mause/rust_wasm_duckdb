@@ -178,7 +178,7 @@ struct AlignToSixteen([i32; 1]);
 macro_rules! jse {
     ($js_expr:expr, $( $i:ident ),*) => {
         {
-            let array = &AlignToSixteen([$($i)*, ]);
+            let array = &AlignToSixteen([$($i,)*]);
             let sig = CString::new("i".repeat(array.0.len())).expect("sig");
             const SNIPPET: &'static [u8] = $js_expr;
 
@@ -387,5 +387,13 @@ speculate! {
         let value = duckdb_timestamp::new(duckdb_date::new(1996, 8, 7), duckdb_time::new(12, 10, 0, 0));
 
         assert_eq!(value.to_string(), "1996-08-07T12:10:00.0");
+    }
+
+    test "multi args works" {
+        fn addition(a: i32, b: i32) -> i32 {
+            jse!(b"$0 + $1", a, b)
+        }
+
+        assert_eq!(addition(10, 12), 22);
     }
 }
