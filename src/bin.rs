@@ -8,6 +8,7 @@ use speculate::speculate;
 
 use crate::state::DuckDBState;
 use libc::c_void;
+#[allow(non_camel_case_types)]
 pub type c_char = i8;
 use crate::types::duckdb_date;
 use std::alloc::{alloc, Layout};
@@ -73,7 +74,7 @@ impl ToString for DbType {
             Double(f) => f,
             String(s) => s,
             Unknown(s) => s,
-            Date(s) => panic!("Should not get here"),
+            Date(_) => panic!("Should not get here"),
         };
 
         value.to_string()
@@ -194,6 +195,52 @@ fn call(string: String) -> i32 {
     }
 }
 
+struct ResolvedResult<'a> {
+    result: *const DuckDBResult,
+    resolved: &'a DuckDBResult,
+    columns: Vec<DuckDBColumn>,
+    length: usize,
+}
+impl<'a> ResolvedResult<'a> {
+    unsafe fn new(result: *const DuckDBResult) -> Self {
+        let resolved = &*result;
+
+        let length = resolved.column_count.try_into().expect("Too many columns");
+        let columns: Vec<DuckDBColumn> = Vec::from_raw_parts(resolved.columns, length, length);
+
+        Self {
+            result,
+            resolved,
+            columns,
+            length,
+        }
+    }
+
+    fn column(&self, col: i64) -> &DuckDBColumn {
+        &self.resolved.columns[<usize as TryFrom<i64>>::try_from(col).expect("Too big")]
+    }
+
+    unsafe fn consume(&self, col: i64, row: i64) -> Result<DbType, Box<dyn std::error::Error>> {
+        use crate::DuckDBType::*;
+
+        let column: &DuckDBColumn = self.column(col);
+        let result = self.result;
+
+        Ok(match &column.type_ {
+            DuckDBTypeInteger => DbType::Integer(duckdb_value_int64(result, col, row)),
+            DuckDBTypeDate => DbType::Date(duckdb_value_date(result, col, row)),
+            DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
+            DuckDBTypeDouble => DbType::Double(duckdb_value_double(result, col, row)),
+            DuckDBTypeVarchar => DbType::String(
+                CStr::from_ptr(duckdb_value_varchar(result, col, row))
+                    .to_string_lossy()
+                    .to_string(),
+            ),
+            _ => DbType::Unknown("unknown".to_string()),
+        })
+    }
+}
+
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let database = malloc(PTR);
     let path = CString::new("db.db").unwrap();
@@ -207,19 +254,15 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let status = query(database, s.as_ptr(), result);
     println!("status: {}", status);
     status?;
-    let resolved = &*result;
 
-    println!("result: {:?}", resolved);
+    let resolved = ResolvedResult::new(result);
 
-    let length = resolved.column_count.try_into()?;
-    let columns: Vec<DuckDBColumn> = Vec::from_raw_parts(resolved.columns, length, length);
-
-    println!("columns: {:?}", columns);
+    println!("columns: {:?}", resolved.columns);
 
     let mut string = String::from("<table><thead>");
 
-    for col_idx in 0..resolved.column_count {
-        let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col_idx)?];
+    for col_idx in 0..resolved.resolved.column_count {
+        let column: &DuckDBColumn = resolved.column(col_idx);
 
         string += format!(
             "<td>{}: {:?}</td>",
@@ -231,24 +274,10 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     string += "</thead><tbody>";
 
-    for row in 0..resolved.row_count {
+    for row in 0..resolved.resolved.row_count {
         string += "<tr>";
-        for col in 0..resolved.column_count {
-            let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col)?];
-
-            let thingy: DbType = match &column.type_ {
-                DuckDBType::DuckDBTypeInteger => {
-                    DbType::Integer(duckdb_value_int64(result, col, row))
-                }
-                DuckDBType::DuckDBTypeDate => DbType::Date(duckdb_value_date(result, col, row)),
-                DuckDBType::DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
-                DuckDBType::DuckDBTypeVarchar => DbType::String(
-                    CStr::from_ptr(duckdb_value_varchar(result, col, row))
-                        .to_string_lossy()
-                        .to_string(),
-                ),
-                _ => DbType::Unknown("unknown".to_string()),
-            };
+        for col in 0..resolved.resolved.column_count {
+            let thingy: DbType = consume(&resolved, col, row)?;
 
             string += format!("<td>{}</td>", thingy.to_string()).as_str();
         }
