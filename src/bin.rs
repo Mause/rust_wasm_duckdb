@@ -5,6 +5,7 @@
 use crate::state::DuckDBState;
 use libc::c_void;
 pub type c_char = i8;
+use crate::types::duckdb_date;
 use std::alloc::{alloc, Layout};
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
@@ -49,6 +50,7 @@ pub enum DuckDBType {
 enum DbType {
     Integer(i64),
     Float(f32),
+    Date(*const duckdb_date),
     Double(f64),
     String(String),
     Unknown(String),
@@ -56,12 +58,18 @@ enum DbType {
 impl ToString for DbType {
     fn to_string(&self) -> String {
         use crate::DbType::*;
+
+        if let Date(s) = self {
+            return unsafe { s.as_ref().expect("date resolved") }.to_string();
+        }
+
         let value: &dyn ToString = match self {
             Integer(i) => i,
             Float(f) => f,
             Double(f) => f,
             String(s) => s,
             Unknown(s) => s,
+            Date(s) => panic!("Should not get here"),
         };
 
         value.to_string()
@@ -140,6 +148,8 @@ extern "C" {
     /// Fetches a blob from a result set column. Returns a blob with blob.data set to nullptr on failure or NULL. The
     /// resulting "blob.data" must be freed with free.
     fn duckdb_value_blob(result: *const DuckDBResult, col: i64, row: i64) -> *const DuckDBBlob;
+
+    fn duckdb_value_date(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_date;
 
     fn query(db: *const Database, query: *const c_char, result: *const DuckDBResult)
         -> DuckDBState;
@@ -226,6 +236,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
                 DuckDBType::DuckDBTypeInteger => {
                     DbType::Integer(duckdb_value_int64(result, col, row))
                 }
+                DuckDBType::DuckDBTypeDate => DbType::Date(duckdb_value_date(result, col, row)),
                 DuckDBType::DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
                 DuckDBType::DuckDBTypeVarchar => DbType::String(
                     CStr::from_ptr(duckdb_value_varchar(result, col, row))
