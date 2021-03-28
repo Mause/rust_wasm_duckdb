@@ -46,7 +46,14 @@ pub enum DuckDBType {
 }
 
 enum DbType {
-    I32(i32),
+    Integer(i64),
+    Float(f64),
+    String(String),
+}
+impl ToString for DbType {
+    fn to_string(&self) -> String {
+        self.0.to_string()
+    }
 }
 
 #[repr(C)]
@@ -203,14 +210,16 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
         for col in 0..resolved.column_count {
             let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col)?];
 
-            let thingy = match &column.type_ {
-                DuckDBType::DuckDBTypeInteger => duckdb_value_int64(result, col, row).to_string(),
-                DuckDBType::DuckDBTypeFloat => duckdb_value_float(result, col, row).to_string(),
-                DuckDBType::DuckDBTypeVarchar => {
+            let thingy: DbType = match &column.type_ {
+                DuckDBType::DuckDBTypeInteger => {
+                    DbType::Integer(duckdb_value_int64(result, col, row))
+                }
+                DuckDBType::DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
+                DuckDBType::DuckDBTypeVarchar => DbType::String(
                     CStr::from_ptr(duckdb_value_varchar(result, col, row))
                         .to_string_lossy()
-                        .to_string()
-                }
+                        .to_string(),
+                ),
                 _ => "unknown".to_string(),
             };
 
