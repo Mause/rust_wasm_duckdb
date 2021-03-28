@@ -158,6 +158,12 @@ extern "C" {
 
     fn query(db: *const Database, query: *const c_char, result: *const DuckDBResult)
         -> DuckDBState;
+
+    pub fn emscripten_asm_const_int(
+        code: *const u8,
+        sigPtr: *const u8,
+        argBuf: *const u8,
+    ) -> *mut u8;
 }
 
 fn malloc<T: Sized>(size: usize) -> *const T {
@@ -165,14 +171,6 @@ fn malloc<T: Sized>(size: usize) -> *const T {
 }
 
 static PTR: usize = core::mem::size_of::<i32>();
-
-extern "C" {
-    pub fn emscripten_asm_const_int(
-        code: *const u8,
-        sigPtr: *const u8,
-        argBuf: *const u8,
-    ) -> *mut u8;
-}
 
 #[repr(C, align(16))]
 struct AlignToSixteen([i32; 1]);
