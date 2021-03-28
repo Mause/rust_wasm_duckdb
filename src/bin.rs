@@ -47,7 +47,8 @@ pub enum DuckDBType {
 
 enum DbType {
     Integer(i64),
-    Float(f64),
+    Float(f32),
+    Double(f64),
     String(String),
     Unknown(String),
 }
@@ -56,6 +57,7 @@ impl ToString for DbType {
         match self {
             Integer(i) => i.to_string(),
             Float(f) => f.to_string(),
+            Double(f) => f.to_string(),
             String(s) => s,
             Unknown(s) => s,
         }
