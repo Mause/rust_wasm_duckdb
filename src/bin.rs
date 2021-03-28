@@ -203,7 +203,9 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
                 DuckDBType::DuckDBTypeInteger => duckdb_value_int64(result, col, row).to_string(),
                 DuckDBType::DuckDBTypeFloat => duckdb_value_float(result, col, row).to_string(),
                 DuckDBType::DuckDBTypeVarchar => {
-                    CStr::from_ptr(duckdb_value_varchar(result, col, row)).to_string_lossy()
+                    CStr::from_ptr(duckdb_value_varchar(result, col, row))
+                        .to_string_lossy()
+                        .to_string()
                 }
                 _ => "unknown".to_string(),
             };
