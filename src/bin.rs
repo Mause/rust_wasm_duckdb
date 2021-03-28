@@ -198,7 +198,7 @@ fn set_body_html(string: String) -> i32 {
     let input = cstring.as_ptr() as *const _ as i32;
 
     jse!(
-        b"let i = arguments[0]; document.body.innerHTML = UTF8ToString(i, 1000); return i;\x00",
+        b"document.body.innerHTML = UTF8ToString($0, 1000);\x00",
         input
     )
 }
@@ -207,10 +207,7 @@ fn set_page_title(string: String) -> i32 {
     let cstring = CString::new(string).expect("string");
     let input = cstring.as_ptr() as *const _ as i32;
 
-    jse!(
-        b"let i = arguments[0]; document.title = UTF8ToString(i, 1000); return i;\x00",
-        input
-    )
+    jse!(b"document.title = UTF8ToString($0, 1000);\x00", input)
 }
 
 struct ResolvedResult<'a> {
