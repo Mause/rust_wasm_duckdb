@@ -15,7 +15,7 @@ impl duckdb_date {
 impl Display for duckdb_date {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         f.write_fmt(format_args!(
-            "{:0<4}-{:0<2}-{:0<2}",
+            "{:0>4}-{:0>2}-{:0>2}",
             self.year, self.month, self.day
         ))
     }
@@ -42,7 +42,7 @@ impl duckdb_time {
 impl Display for duckdb_time {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         f.write_fmt(format_args!(
-            "{:0<2}:{:0<2}:{:0<2}.{}",
+            "{:0>2}:{:0>2}:{:0>2}.{}",
             self.hour, self.min, self.sec, self.micros
         ))
     }

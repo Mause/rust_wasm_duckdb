@@ -320,7 +320,7 @@ fn hook(info: &std::panic::PanicInfo) {
     // the message's contents, by including the stack in the message
     // contents we make sure it is available to the user.
     msg.push_str("\n\nStack:\n\n");
-    #[cfg(not(nodejs))]
+    #[cfg(not(test))]
     {
         let error = js_sys::Error::new("test1");
         println!("{:?}", error);
@@ -374,4 +374,10 @@ speculate! {
         main().unwrap();
     }
 
+    test "to_string_works" {
+        use crate::types::*;
+        let value = duckdb_timestamp::new(duckdb_date::new(1996, 8, 7), duckdb_time::new(12, 10, 0, 0));
+
+        assert_eq!(value.to_string(), "1996-08-07T12:10:00.0");
+    }
 }
