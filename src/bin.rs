@@ -49,6 +49,7 @@ enum DbType {
     Integer(i64),
     Float(f64),
     String(String),
+    Unknown(String),
 }
 impl ToString for DbType {
     fn to_string(&self) -> String {
@@ -220,7 +221,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
                         .to_string_lossy()
                         .to_string(),
                 ),
-                _ => "unknown".to_string(),
+                _ => DbType::Unknown("unknown".to_string()),
             };
 
             string += format!("<td>{}</td>", thingy).as_str();
