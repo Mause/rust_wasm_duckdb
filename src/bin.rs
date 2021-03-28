@@ -194,6 +194,20 @@ macro_rules! jse {
             }
         }
     };
+    ($js_expr:expr) => {
+        {
+            let sig = "\x00";
+            const SNIPPET: &'static [u8] = $js_expr;
+
+            unsafe {
+                emscripten_asm_const_int(
+                    SNIPPET as *const _ as *const u8,
+                    sig.as_ptr() as *const _ as *const u8,
+                    std::ptr::null() as *const _ as *const u8,
+                ) as i32
+            }
+        }
+    };
 }
 
 fn set_body_html(string: String) -> i32 {
@@ -368,7 +382,7 @@ speculate! {
     before {
         std::panic::set_hook(Box::new(hook));
 
-        jse!(b"global.document = {body: {}};\x00", 0);
+        jse!(b"global.document = {body: {}};\x00");
     }
 
     test "works" {
