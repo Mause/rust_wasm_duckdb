@@ -109,9 +109,9 @@ extern "C" {
     /// Converts the specified value to an uint64_t. Returns 0 on failure or NULL.
     fn duckdb_value_uint64(result: *const DuckDBResult, col: i64, row: i64) -> u64;
     /// Converts the specified value to a float. Returns 0.0 on failure or NULL.
-    // fn duckdb_value_float(result: *const DuckDBResult, col: i64, row: i64) -> float;
+    fn duckdb_value_float(result: *const DuckDBResult, col: i64, row: i64) -> f32;
     /// Converts the specified value to a double. Returns 0.0 on failure or NULL.
-    // fn duckdb_value_double(result: *const DuckDBResult, col: i64, row: i64) -> double;
+    fn duckdb_value_double(result: *const DuckDBResult, col: i64, row: i64) -> f64;
     /// Converts the specified value to a string. Returns nullptr on failure or NULL. The result must be freed with free.
     fn duckdb_value_varchar(result: *const DuckDBResult, col: i64, row: i64) -> *const c_char;
     /// Fetches a blob from a result set column. Returns a blob with blob.data set to nullptr on failure or NULL. The
@@ -164,7 +164,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("DB open");
 
-    let s = CString::new("SELECT 42").expect("string");
+    let s = CString::new("SELECT 4,2").expect("string");
 
     let result = malloc(PTR);
     let status = query(database, s.as_ptr(), result);
@@ -194,12 +194,19 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     string += "</thead><tbody>";
 
-    for row_idx in 0..resolved.row_count {
+    for row in 0..resolved.row_count {
         string += "<tr>";
-        for col_idx in 0..resolved.column_count {
-            let rval = duckdb_value_int32(result, col_idx, row_idx);
+        for col in 0..resolved.column_count {
+            let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col)?];
 
-            string += format!("<td>{:?}</td>", rval).as_str();
+            let thingy = match &column.type_ {
+                DuckDBType::DuckDBTypeInteger => duckdb_value_int64(result, col, row).to_string(),
+                DuckDBType::DuckDBTypeFloat => duckdb_value_float(result, col, row).to_string(),
+                // DuckDBType::DuckDBTypeVarchar => duckdb_value_varchar(result, col, row).to_string()
+                _ => "unknown".to_string(),
+            };
+
+            string += format!("<td>{}</td>", thingy).as_str();
         }
         string += "</tr>";
     }

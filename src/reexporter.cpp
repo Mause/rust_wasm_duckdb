@@ -341,6 +341,7 @@ idx_t GetCTypeSize(duckdb_type type)
     case DUCKDB_TYPE_INTERVAL:
         return sizeof(duckdb_interval);
     default:
+        std::cout << "Unsupported type: " << type << std::endl;
         // unsupported type
         D_ASSERT(0);
         return sizeof(const char *);
