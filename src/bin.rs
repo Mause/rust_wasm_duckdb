@@ -54,6 +54,7 @@ enum DbType {
 }
 impl ToString for DbType {
     fn to_string(&self) -> String {
+        use crate::DbType::*;
         match self {
             Integer(i) => i.to_string(),
             Float(f) => f.to_string(),
