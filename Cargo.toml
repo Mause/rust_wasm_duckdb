@@ -12,6 +12,7 @@ js-sys = "*"
 libc = "*"
 
 [dev-dependencies]
+speculate = "*"
 wasm-bindgen-test = "0.3"
 
 [package]

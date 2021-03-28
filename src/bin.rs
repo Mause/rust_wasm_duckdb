@@ -1,6 +1,10 @@
 #![feature(extern_types)]
 #![feature(try_trait)]
 #![feature(static_nobundle)]
+#[cfg(test)]
+extern crate speculate;
+#[cfg(test)]
+use speculate::speculate;
 
 use crate::state::DuckDBState;
 use libc::c_void;
@@ -316,8 +320,11 @@ fn hook(info: &std::panic::PanicInfo) {
     // the message's contents, by including the stack in the message
     // contents we make sure it is available to the user.
     msg.push_str("\n\nStack:\n\n");
-    let error = js_sys::Error::new("test1");
-    println!("{:?}", error);
+    #[cfg(not(nodejs))]
+    {
+        let error = js_sys::Error::new("test1");
+        println!("{:?}", error);
+    }
     // let stack = error.stack();
     // println!("{:?}", stack);
     // msg.push_str(stack.as_str().unwrap_or_default());
@@ -345,24 +352,26 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[test]
-fn setup_test() {
-    const SNIPPET: &'static [u8] = b"global.document = {body: {}};\x00";
+#[cfg(test)]
+speculate! {
+    before {
+        std::panic::set_hook(Box::new(hook));
 
-    let sig = "\x00";
+        const SNIPPET: &'static [u8] = b"global.document = {body: {}};\x00";
 
-    unsafe {
-        emscripten_asm_const_int(
-            SNIPPET as *const _ as *const u8,
-            sig as *const _ as *const u8,
-            std::ptr::null() as *const _ as *const u8,
-        );
+        let sig = "\x00";
+
+        unsafe {
+            emscripten_asm_const_int(
+                SNIPPET as *const _ as *const u8,
+                sig as *const _ as *const u8,
+                std::ptr::null() as *const _ as *const u8,
+            );
+        }
     }
-}
 
-#[test]
-fn it_works() {
-    setup_test();
+    test "works" {
+        main().unwrap();
+    }
 
-    main().unwrap();
 }
