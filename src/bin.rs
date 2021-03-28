@@ -266,44 +266,6 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-unsafe fn other() -> Result<(), Box<dyn std::error::Error>> {
-    let database = malloc(PTR);
-    duckdb_open(std::ptr::null(), database)?;
-
-    let connection: *const Connection = malloc(PTR);
-    duckdb_connect(database, connection)?;
-    println!("{:?} {:?}", database, connection);
-
-    println!("building string");
-    let query = CString::new("select 1")?;
-    println!("query: {:?}", query);
-    let result = malloc(PTR);
-    duckdb_query(connection, query.as_ptr(), result)?;
-
-    let rl_res = result.as_ref().expect("res");
-
-    let length = rl_res.column_count.try_into().unwrap();
-    let columns: Vec<DuckDBColumn> = Vec::from_raw_parts(rl_res.columns, length, length);
-
-    println!("{:?}", columns);
-
-    for row_idx in 0..rl_res.row_count {
-        for col_idx in 0..rl_res.column_count {
-            let rval = duckdb_value_varchar(result, col_idx, row_idx);
-            println!("val: {:?}", rval);
-            // _emscripten_builtin_free(rval);
-        }
-        println!("\n");
-    }
-    duckdb_destroy_result(result);
-
-    duckdb_disconnect(connection);
-
-    duckdb_close(database);
-
-    Ok(())
-}
-
 fn hook(info: &std::panic::PanicInfo) {
     let mut msg = info.to_string();
 
