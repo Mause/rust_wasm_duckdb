@@ -176,13 +176,13 @@ static PTR: usize = core::mem::size_of::<i32>();
 macro_rules! jse {
     ($js_expr:expr, $( $i:ident ),*) => {
         {
-            const len: usize = count_tts!($($i)*);
+            const LEN: usize = count_tts!($($i)*);
 
             #[repr(C, align(16))]
-            struct AlignToSixteen([i32; len]);
+            struct AlignToSixteen([i32; LEN]);
 
             let array = &AlignToSixteen([$($i,)*]);
-            let sig = CString::new("i".repeat(len)).expect("sig");
+            let sig = CString::new("i".repeat(LEN)).expect("sig");
             const SNIPPET: &'static [u8] = $js_expr;
 
             unsafe {
