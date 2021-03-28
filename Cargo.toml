@@ -8,6 +8,7 @@ shellexpand = "*"
 which = "*"
 
 [dependencies]
+count_tts = "*"
 js-sys = "*"
 libc = "*"
 

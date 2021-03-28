@@ -7,6 +7,7 @@ extern crate speculate;
 use speculate::speculate;
 
 use crate::state::DuckDBState;
+use count_tts::count_tts;
 use libc::c_void;
 #[allow(non_camel_case_types)]
 pub type c_char = i8;
@@ -172,14 +173,16 @@ fn malloc<T: Sized>(size: usize) -> *const T {
 
 static PTR: usize = core::mem::size_of::<i32>();
 
-#[repr(C, align(16))]
-struct AlignToSixteen([i32; 1]);
-
 macro_rules! jse {
     ($js_expr:expr, $( $i:ident ),*) => {
         {
+            const len: usize = count_tts!($($i)*);
+
+            #[repr(C, align(16))]
+            struct AlignToSixteen([i32; len]);
+
             let array = &AlignToSixteen([$($i,)*]);
-            let sig = CString::new("i".repeat(array.0.len())).expect("sig");
+            let sig = CString::new("i".repeat(len)).expect("sig");
             const SNIPPET: &'static [u8] = $js_expr;
 
             unsafe {

@@ -46,6 +46,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "count_tts"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "809b88cb47b0327f505fc39f5415e4ab02629d2368d9eadac18d7012c5a40bb2"
+
+[[package]]
 name = "dirs-next"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -176,6 +182,7 @@ name = "rust_wasm_duckdb"
 version = "0.1.0"
 dependencies = [
  "cc",
+ "count_tts",
  "js-sys",
  "libc",
  "shellexpand",
