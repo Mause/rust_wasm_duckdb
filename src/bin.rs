@@ -45,7 +45,10 @@ pub enum DuckDBType {
     DuckDBTypeBlob = 14,
 }
 
-enum DbType {
+enum DbType<T>
+where
+    T: ToString,
+{
     Integer(i64),
     Float(f64),
     String(String),
@@ -53,7 +56,9 @@ enum DbType {
 }
 impl ToString for DbType {
     fn to_string(&self) -> String {
-        self.0.to_string()
+        match self {
+            _ if _ = ToString => _.to_string(),
+        }
     }
 }
 
