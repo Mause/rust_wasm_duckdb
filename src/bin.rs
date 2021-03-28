@@ -7,7 +7,7 @@ use libc::c_void;
 pub type c_char = i8;
 use std::alloc::{alloc, Layout};
 use std::convert::{TryFrom, TryInto};
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 
 mod state;
 
@@ -202,7 +202,11 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
             let thingy = match &column.type_ {
                 DuckDBType::DuckDBTypeInteger => duckdb_value_int64(result, col, row).to_string(),
                 DuckDBType::DuckDBTypeFloat => duckdb_value_float(result, col, row).to_string(),
-                // DuckDBType::DuckDBTypeVarchar => duckdb_value_varchar(result, col, row).to_string()
+                DuckDBType::DuckDBTypeVarchar => {
+                    CStr::from_ptr(duckdb_value_varchar(result, col, row))
+                        .to_string_lossy()
+                        .to_string()
+                }
                 _ => "unknown".to_string(),
             };
 
