@@ -217,7 +217,7 @@ impl<'a> ResolvedResult<'a> {
     }
 
     fn column(&self, col: i64) -> &DuckDBColumn {
-        &self.resolved.columns[<usize as TryFrom<i64>>::try_from(col).expect("Too big")]
+        &self.columns[<usize as TryFrom<i64>>::try_from(col).expect("Too big")]
     }
 
     unsafe fn consume(&self, col: i64, row: i64) -> Result<DbType, Box<dyn std::error::Error>> {
@@ -277,7 +277,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     for row in 0..resolved.resolved.row_count {
         string += "<tr>";
         for col in 0..resolved.resolved.column_count {
-            let thingy: DbType = consume(&resolved, col, row)?;
+            let thingy = resolved.consume(col, row)?;
 
             string += format!("<td>{}</td>", thingy.to_string()).as_str();
         }
