@@ -10,6 +10,7 @@ use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
 
 mod state;
+mod types;
 
 #[repr(C)]
 #[derive(Debug)]
