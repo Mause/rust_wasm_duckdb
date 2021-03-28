@@ -45,6 +45,26 @@ pub enum DuckDBType {
     DuckDBTypeBlob = 14,
 }
 
+enum DbType {
+    Integer(i64),
+    Float(f32),
+    Double(f64),
+    String(String),
+    Unknown(String),
+}
+impl ToString for DbType {
+    fn to_string(&self) -> String {
+        use crate::DbType::*;
+        match self {
+            Integer(i) => i.to_string(),
+            Float(f) => f.to_string(),
+            Double(f) => f.to_string(),
+            String(s) => s.to_string(),
+            Unknown(s) => s.to_string(),
+        }
+    }
+}
+
 #[repr(C)]
 #[derive(Debug)]
 struct DuckDBColumn {
@@ -199,18 +219,20 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
         for col in 0..resolved.column_count {
             let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col)?];
 
-            let thingy = match &column.type_ {
-                DuckDBType::DuckDBTypeInteger => duckdb_value_int64(result, col, row).to_string(),
-                DuckDBType::DuckDBTypeFloat => duckdb_value_float(result, col, row).to_string(),
-                DuckDBType::DuckDBTypeVarchar => {
+            let thingy: DbType = match &column.type_ {
+                DuckDBType::DuckDBTypeInteger => {
+                    DbType::Integer(duckdb_value_int64(result, col, row))
+                }
+                DuckDBType::DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
+                DuckDBType::DuckDBTypeVarchar => DbType::String(
                     CStr::from_ptr(duckdb_value_varchar(result, col, row))
                         .to_string_lossy()
-                        .to_string()
-                }
-                _ => "unknown".to_string(),
+                        .to_string(),
+                ),
+                _ => DbType::Unknown("unknown".to_string()),
             };
 
-            string += format!("<td>{}</td>", thingy).as_str();
+            string += format!("<td>{}</td>", thingy.to_string()).as_str();
         }
         string += "</tr>";
     }
