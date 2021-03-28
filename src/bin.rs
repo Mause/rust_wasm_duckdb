@@ -398,7 +398,7 @@ speculate! {
 
     test "multi args works" {
         fn addition(a: i32, b: i32) -> i32 {
-            jse!(b"$0 + $1", a, b)
+            jse!(b"return $0 + $1", a, b)
         }
 
         assert_eq!(addition(10, 12), 22);
