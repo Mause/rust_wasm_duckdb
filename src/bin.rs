@@ -224,7 +224,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
                 _ => DbType::Unknown("unknown".to_string()),
             };
 
-            string += format!("<td>{}</td>", thingy).as_str();
+            string += format!("<td>{}</td>", thingy.to_string()).as_str();
         }
         string += "</tr>";
     }
