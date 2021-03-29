@@ -16,6 +16,7 @@ use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
 
 mod state;
+mod tree;
 mod types;
 
 #[repr(C)]
