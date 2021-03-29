@@ -1,4 +1,4 @@
-use dodrio::{bumpalo, Attribute, Vdom, Element, Node, Render, RenderContext, VdomInnerExclusive};
+use dodrio::{bumpalo, Attribute, Element, Node, Render, RenderContext, RootRender, Vdom};
 #[cfg(test)]
 use speculate::speculate;
 //  use wasm_bindgen::UnwrapThrowExt;
@@ -9,7 +9,7 @@ speculate! {
 
         let component = Hello::new("world");
 
-        Vdom::new(Element(), component);
+        Vdom::new(Element::new(), component);
     }
 }
 
