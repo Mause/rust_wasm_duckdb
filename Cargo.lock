@@ -225,6 +225,7 @@ dependencies = [
  "shellexpand",
  "speculate",
  "wasm-bindgen-test",
+ "web-sys",
  "which",
 ]
 

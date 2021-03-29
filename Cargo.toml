@@ -9,6 +9,7 @@ which = "*"
 
 [dependencies]
 js-sys = "*"
+web-sys = "*"
 libc = "*"
 dodrio = "*"
 
