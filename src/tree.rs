@@ -24,9 +24,9 @@ impl<'a, 'who> Render<'a> for Hello<'who> {
             .attr("id", id.into_bump_str())
             .on("click", |root, _vdom, _event| {
                 let hello = root.unwrap_mut::<Hello>();
-                web_sys::window()
-                    .expect_throw("should have a `Window` on the Web")
-                    .alert_with_message(hello.who);
+                /*                web_sys::window()
+                .expect_throw("should have a `Window` on the Web")
+                .alert_with_message(hello.who);*/
             })
             .children([
                 text("Hello, "),
