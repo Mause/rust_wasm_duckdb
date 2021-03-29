@@ -1,5 +1,5 @@
 use dodrio::{bumpalo, Attribute, Node, Render, RenderContext};
-use wasm_bindgen::UnwrapThrowExt;
+//  use wasm_bindgen::UnwrapThrowExt;
 
 /// A component that greets someone.
 pub struct Hello<'who> {
