@@ -2,8 +2,6 @@
 #![feature(try_trait)]
 #![feature(static_nobundle)]
 #[cfg(test)]
-extern crate speculate;
-#[cfg(test)]
 use speculate::speculate;
 
 use crate::state::DuckDBState;

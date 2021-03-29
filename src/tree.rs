@@ -1,5 +1,17 @@
 use dodrio::{bumpalo, Attribute, Node, Render, RenderContext};
+#[cfg(test)]
+use speculate::speculate;
 //  use wasm_bindgen::UnwrapThrowExt;
+
+speculate! {
+    test "sanity" {
+        use bumpalo::Bump;
+
+        let bump = Bump::new();
+        let mut rc = RenderContext { bump };
+        Hello.new("world").render(&mut rc);
+    }
+}
 
 /// A component that greets someone.
 pub struct Hello<'who> {
