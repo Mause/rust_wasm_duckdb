@@ -2,6 +2,7 @@ use dodrio::{bumpalo, Attribute, Element, Node, Render, RenderContext, RootRende
 #[cfg(test)]
 use speculate::speculate;
 //  use wasm_bindgen::UnwrapThrowExt;
+use web_sys::document;
 
 speculate! {
     test "sanity" {
@@ -9,7 +10,7 @@ speculate! {
 
         let component = Hello::new("world");
 
-        Vdom::new(Element::new(), component);
+        Vdom::new(document().expect("broken"), component);
     }
 }
 
