@@ -24,7 +24,6 @@ impl<'who> Hello<'who> {
         Hello { who }
     }
 }
-impl<'who> RootRender for Hello<'who> {}
 
 impl<'a, 'who> Render<'a> for Hello<'who> {
     fn render(&self, cx: &mut RenderContext<'a>) -> Node<'a> {
