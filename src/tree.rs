@@ -1,4 +1,4 @@
-use dodrio::{bumpalo, Attribute, Node, Render, RenderContext};
+use dodrio::{bumpalo, Attribute, Vdom, Element, Node, Render, RenderContext, VdomInnerExclusive};
 #[cfg(test)]
 use speculate::speculate;
 //  use wasm_bindgen::UnwrapThrowExt;
@@ -7,9 +7,9 @@ speculate! {
     test "sanity" {
         use bumpalo::Bump;
 
-        let bump = Bump::new();
-        let mut rc = RenderContext { bump };
-        Hello.new("world").render(&mut rc);
+        let component = Hello::new("world");
+
+        Vdom::new(Element(), component);
     }
 }
 
@@ -24,6 +24,7 @@ impl<'who> Hello<'who> {
         Hello { who }
     }
 }
+impl<'who> RootRender for Hello<'who> {}
 
 impl<'a, 'who> Render<'a> for Hello<'who> {
     fn render(&self, cx: &mut RenderContext<'a>) -> Node<'a> {
