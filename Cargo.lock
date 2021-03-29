@@ -10,9 +10,21 @@ checksum = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
 
 [[package]]
 name = "bumpalo"
+version = "2.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ad807f2fc2bf185eeb98ff3a901bd46dc5ad58163d0fa4577ba0d25674d71708"
+
+[[package]]
+name = "bumpalo"
 version = "3.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "63396b8a4b9de3f4fdfb320ab6080762242f66a8ef174c49d8e19b674db4cdbe"
+
+[[package]]
+name = "byteorder"
+version = "1.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
 name = "cc"
@@ -67,6 +79,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "dodrio"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7593dfc68e57dc1d058ada0f151ba07f4b05183c4da4c4df8ff651a81ef0fab"
+dependencies = [
+ "bumpalo 2.6.0",
+ "cfg-if 0.1.10",
+ "fxhash",
+ "js-sys",
+ "longest-increasing-subsequence",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "fxhash"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c31b6d751ae2c7f11320402d34e41349dd1016f8d5d45e48c4312bc8625af50c"
+dependencies = [
+ "byteorder",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -115,6 +152,12 @@ checksum = "51b9bbe6c47d51fc3e1a9b945965946b4c44142ab8792c50835a980d362c2710"
 dependencies = [
  "cfg-if 1.0.0",
 ]
+
+[[package]]
+name = "longest-increasing-subsequence"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3bd0dd2cd90571056fdb71f6275fada10131182f84899f4b2a916e565d81d86"
 
 [[package]]
 name = "proc-macro2"
@@ -176,6 +219,7 @@ name = "rust_wasm_duckdb"
 version = "0.1.0"
 dependencies = [
  "cc",
+ "dodrio",
  "js-sys",
  "libc",
  "shellexpand",
@@ -287,7 +331,7 @@ version = "0.2.72"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "046ceba58ff062da072c7cb4ba5b22a37f00a302483f7e2a6cdc18fedbdc1fd3"
 dependencies = [
- "bumpalo",
+ "bumpalo 3.6.1",
  "lazy_static",
  "log",
  "proc-macro2 1.0.24",
