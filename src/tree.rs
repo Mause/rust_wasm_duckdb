@@ -10,7 +10,11 @@ speculate! {
 
         let component = Hello::new("world");
 
-        Vdom::new(window().expect("window").document().expect("broken").document_element().expect("el"), component);
+        Vdom::new(
+            &window().expect("window")
+            .document().expect("broken")
+            .document_element().expect("el"),
+            component);
     }
 }
 
