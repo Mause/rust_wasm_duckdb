@@ -165,10 +165,12 @@ extern "C" {
         sigPtr: *const u8,
         argBuf: *const u8,
     ) -> *mut u8;
+
+    pub fn mallocy() -> *const c_void;
 }
 
 fn malloc<T: Sized>(size: usize) -> *const T {
-    unsafe { alloc(Layout::from_size_align(size, 8).expect("FUck")) as *const T }
+    unsafe { mallocy() as *const T }
 }
 
 static PTR: usize = core::mem::size_of::<i32>();
