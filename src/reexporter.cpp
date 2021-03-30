@@ -383,7 +383,7 @@ static Value GetCValue(duckdb_result *result, idx_t col, idx_t row)
 extern "C"
 {
     void* mallocy() {
-        return calloc(sizeof(void*));
+        return calloc(1, sizeof(void*));
     }
 
     duckdb_date *duckdb_value_date(duckdb_result *result, idx_t col, idx_t row)
