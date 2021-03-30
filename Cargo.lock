@@ -178,12 +178,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "render"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "07528d0483b1b4727b1419c82ed4be46926971b08af764d9d2ef0ac04a47e202"
+dependencies = [
+ "render_macros",
+]
+
+[[package]]
+name = "render_macros"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6eec48d491a1f66f67c50545566b74a8c8435fe4b7dbf163d15a1e391aa4a2a7"
+dependencies = [
+ "proc-macro2 1.0.24",
+ "quote 1.0.9",
+ "syn 1.0.62",
+]
+
+[[package]]
 name = "rust_wasm_duckdb"
 version = "0.1.0"
 dependencies = [
  "cc",
  "js-sys",
  "libc",
+ "render",
  "shellexpand",
  "speculate",
  "wasm-bindgen-test",

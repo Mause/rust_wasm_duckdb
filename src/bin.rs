@@ -1,8 +1,8 @@
 #![feature(extern_types)]
 #![feature(try_trait)]
 #![feature(static_nobundle)]
-#[cfg(test)]
-extern crate speculate;
+#![feature(proc_macro_hygiene)]
+
 #[cfg(test)]
 use speculate::speculate;
 
@@ -387,5 +387,20 @@ speculate! {
         let value = duckdb_timestamp::new(duckdb_date::new(1996, 8, 7), duckdb_time::new(12, 10, 0, 0));
 
         assert_eq!(value.to_string(), "1996-08-07T12:10:00.0");
+    }
+
+    test "html" {
+        use render::{component, rsx, html};
+
+        #[component]
+        fn Heading<'title>(title: &'title str) {
+              rsx! { <h1 class={"title"}>{title}</h1> }
+        }
+
+        let rendered_html = html! {
+              <Heading title={"Hello world!"} />
+        };
+
+        assert_eq!(rendered_html, r#"<h1 class="title">Hello world!</h1>"#);
     }
 }
