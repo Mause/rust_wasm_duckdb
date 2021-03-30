@@ -22,4 +22,4 @@ script = { file = "setup.rs" }
 clear = true
 dependencies = ['build']
 command = "cargo"
-args = ["web", "test", "--nodejs", "--use-system-emscripten", "--", "--nocapture"]
+args = ["web", "test", "--nodejs", "--use-system-emscripten"]
