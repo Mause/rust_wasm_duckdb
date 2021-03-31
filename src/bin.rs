@@ -283,33 +283,12 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("columns: {:?}", resolved.columns);
 
-    let mut string = String::from("<table><thead>");
-
-    for col_idx in 0..resolved.resolved.column_count {
-        let column: &DuckDBColumn = resolved.column(col_idx);
-
-        string += format!(
-            "<td>{}: {:?}</td>",
-            CStr::from_ptr(column.name).to_string_lossy(),
-            column.type_
-        )
-        .as_str();
-    }
-
-    string += "</thead><tbody>";
-
-    for row in 0..resolved.resolved.row_count {
-        string += "<tr>";
-        for col in 0..resolved.resolved.column_count {
-            let thingy = resolved.consume(col, row)?;
-
-            string += format!("<td>{}</td>", thingy.to_string()).as_str();
-        }
-        string += "</tr>";
-    }
-    string += "</tbody></table>";
-
+    let table = Table {
+        resolved: &resolved,
+    };
+    let string = html! { <>{table}</> };
     println!("{}", string);
+
     set_body_html(string);
 
     duckdb_destroy_result(result);
