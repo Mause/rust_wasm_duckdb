@@ -7,6 +7,7 @@
 use speculate::speculate;
 
 use crate::state::DuckDBState;
+use count_tts::count_tts;
 use libc::c_void;
 #[allow(non_camel_case_types)]
 pub type c_char = i8;
@@ -178,21 +179,39 @@ fn malloc<T: Sized>(size: usize) -> *const T {
 
 static PTR: usize = core::mem::size_of::<i32>();
 
-#[repr(C, align(16))]
-struct AlignToSixteen([i32; 1]);
-
 macro_rules! jse {
     ($js_expr:expr, $( $i:ident ),*) => {
         {
-            let array = &AlignToSixteen([$($i)*, ]);
-            let sig = CString::new("i".repeat(array.0.len())).expect("sig");
+            const LEN: usize = count_tts!($($i)*);
+
+            #[repr(C, align(16))]
+            struct AlignToSixteen([i32; LEN]);
+
+            let array = &AlignToSixteen([$($i,)*]);
+            let sig = CString::new("i".repeat(LEN)).expect("sig");
             const SNIPPET: &'static [u8] = $js_expr;
+
+            assert_eq!(SNIPPET[..].last().expect("empty snippet?"), &0);
 
             unsafe {
                 emscripten_asm_const_int(
                     SNIPPET as *const _ as *const u8,
                     sig.as_ptr() as *const _ as *const u8,
                     array as *const _ as *const u8,
+                ) as i32
+            }
+        }
+    };
+    ($js_expr:expr) => {
+        {
+            let sig = CString::new("").expect("sig");
+            const SNIPPET: &'static [u8] = $js_expr;
+
+            unsafe {
+                emscripten_asm_const_int(
+                    SNIPPET as *const _ as *const u8,
+                    sig.as_ptr() as *const _ as *const u8,
+                    std::ptr::null() as *const _ as *const u8,
                 ) as i32
             }
         }
@@ -353,17 +372,11 @@ speculate! {
     before {
         std::panic::set_hook(Box::new(hook));
 
-        const SNIPPET: &'static [u8] = b"global.document = {body: {}};\x00";
+        jse!(b"global.document = {body: {}};\x00");
+    }
 
-        let sig = "\x00";
-
-        unsafe {
-            emscripten_asm_const_int(
-                SNIPPET as *const _ as *const u8,
-                sig as *const _ as *const u8,
-                std::ptr::null() as *const _ as *const u8,
-            );
-        }
+    after {
+        jse!(b"delete global.document;\x00");
     }
 
     test "works" {
@@ -375,6 +388,14 @@ speculate! {
         let value = duckdb_timestamp::new(duckdb_date::new(1996, 8, 7), duckdb_time::new(12, 10, 0, 0));
 
         assert_eq!(value.to_string(), "1996-08-07T12:10:00.0");
+    }
+
+    test "multi args works" {
+        fn addition(a: i32, b: i32) -> i32 {
+            jse!(b"return $0 + $1;\x00", a, b)
+        }
+
+        assert_eq!(addition(10, 12), 22);
     }
 
     test "html" {

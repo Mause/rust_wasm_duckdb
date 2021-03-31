@@ -8,6 +8,7 @@ shellexpand = "*"
 which = "*"
 
 [dependencies]
+count_tts = "*"
 libc = "*"
 render = "*"
 strum_macros = "0.20.1"
