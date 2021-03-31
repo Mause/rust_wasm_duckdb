@@ -191,6 +191,8 @@ macro_rules! jse {
             let sig = CString::new("i".repeat(LEN)).expect("sig");
             const SNIPPET: &'static [u8] = $js_expr;
 
+            assert_eq!(SNIPPET[..].last().expect("empty snippet?"), &b"\x00"[0]);
+
             unsafe {
                 emscripten_asm_const_int(
                     SNIPPET as *const _ as *const u8,
@@ -386,7 +388,7 @@ speculate! {
 
     test "multi args works" {
         fn addition(a: i32, b: i32) -> i32 {
-            jse!(b"return $0 + $1", a, b)
+            jse!(b"return $0 + $1;\x00", a, b)
         }
 
         assert_eq!(addition(10, 12), 22);
