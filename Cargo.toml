@@ -3,17 +3,15 @@ name = "bin"
 path = "src/bin.rs"
 
 [build-dependencies]
-cc = {version= "*", features=['parallel']}
+cc = { version = "*", features = ['parallel'] }
 shellexpand = "*"
 which = "*"
 
 [dependencies]
-js-sys = "*"
 libc = "*"
 
 [dev-dependencies]
 speculate = "*"
-wasm-bindgen-test = "0.3"
 
 [package]
 name = "rust_wasm_duckdb"
