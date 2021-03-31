@@ -10,12 +10,14 @@ use crate::state::DuckDBState;
 use libc::c_void;
 #[allow(non_camel_case_types)]
 pub type c_char = i8;
+use crate::rendering::Table;
 use crate::types::duckdb_date;
-use std::alloc::{alloc, Layout};
+use render::html;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
 use strum_macros::IntoStaticStr;
 
+mod rendering;
 mod state;
 mod types;
 
@@ -215,7 +217,7 @@ fn set_page_title(string: String) -> i32 {
 }
 
 #[derive(Debug)]
-struct ResolvedResult<'a> {
+pub struct ResolvedResult<'a> {
     result: *const DuckDBResult,
     resolved: &'a DuckDBResult,
     columns: Vec<DuckDBColumn>,

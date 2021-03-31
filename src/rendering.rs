@@ -1,4 +1,6 @@
-use render::{component, html, rsx, Render, SimpleElement};
+use crate::{DbType, DuckDBColumn, ResolvedResult};
+use render::{component, rsx, Render, SimpleElement};
+use std::ffi::CStr;
 
 struct Container<T: Render>(Vec<T>);
 impl<T: Render> Render for Container<T> {
@@ -21,7 +23,7 @@ impl Render for DbType {
 }
 
 #[component]
-fn Table<'a>(resolved: &'a ResolvedResult<'a>) -> render::SimpleElement {
+pub fn Table<'a>(resolved: &'a ResolvedResult<'a>) -> render::SimpleElement {
     let head: Vec<_> = (0..resolved.resolved.column_count)
         .map(|col_idx| {
             let column: &DuckDBColumn = resolved.column(col_idx);
