@@ -1,8 +1,8 @@
 #![feature(extern_types)]
 #![feature(try_trait)]
 #![feature(static_nobundle)]
-#[cfg(test)]
-extern crate speculate;
+#![feature(proc_macro_hygiene)]
+
 #[cfg(test)]
 use speculate::speculate;
 
@@ -10,16 +10,19 @@ use crate::state::DuckDBState;
 use libc::c_void;
 #[allow(non_camel_case_types)]
 pub type c_char = i8;
+use crate::rendering::Table;
 use crate::types::duckdb_date;
-use std::alloc::{alloc, Layout};
+use render::html;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
+use strum_macros::IntoStaticStr;
 
+mod rendering;
 mod state;
 mod types;
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IntoStaticStr, Clone, Copy)]
 pub enum DuckDBType {
     DuckDBTypeInvalid = 0,
     // bool
@@ -52,6 +55,7 @@ pub enum DuckDBType {
     DuckDBTypeBlob = 14,
 }
 
+#[derive(Debug, IntoStaticStr)]
 enum DbType {
     Integer(i64),
     Float(f32),
@@ -212,7 +216,8 @@ fn set_page_title(string: String) -> i32 {
     jse!(b"document.title = UTF8ToString($0, 1000);\x00", input)
 }
 
-struct ResolvedResult<'a> {
+#[derive(Debug)]
+pub struct ResolvedResult<'a> {
     result: *const DuckDBResult,
     resolved: &'a DuckDBResult,
     columns: Vec<DuckDBColumn>,
@@ -237,23 +242,25 @@ impl<'a> ResolvedResult<'a> {
         &self.columns[<usize as TryFrom<i64>>::try_from(col).expect("Too big")]
     }
 
-    unsafe fn consume(&self, col: i64, row: i64) -> Result<DbType, Box<dyn std::error::Error>> {
+    fn consume(&self, col: i64, row: i64) -> Result<DbType, Box<dyn std::error::Error>> {
         use crate::DuckDBType::*;
 
         let column: &DuckDBColumn = self.column(col);
         let result = self.result;
 
-        Ok(match &column.type_ {
-            DuckDBTypeInteger => DbType::Integer(duckdb_value_int64(result, col, row)),
-            DuckDBTypeDate => DbType::Date(duckdb_value_date(result, col, row)),
-            DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
-            DuckDBTypeDouble => DbType::Double(duckdb_value_double(result, col, row)),
-            DuckDBTypeVarchar => DbType::String(
-                CStr::from_ptr(duckdb_value_varchar(result, col, row))
-                    .to_string_lossy()
-                    .to_string(),
-            ),
-            _ => DbType::Unknown("unknown".to_string()),
+        Ok(unsafe {
+            match &column.type_ {
+                DuckDBTypeInteger => DbType::Integer(duckdb_value_int64(result, col, row)),
+                DuckDBTypeDate => DbType::Date(duckdb_value_date(result, col, row)),
+                DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
+                DuckDBTypeDouble => DbType::Double(duckdb_value_double(result, col, row)),
+                DuckDBTypeVarchar => DbType::String(
+                    CStr::from_ptr(duckdb_value_varchar(result, col, row))
+                        .to_string_lossy()
+                        .to_string(),
+                ),
+                _ => DbType::Unknown("unknown".to_string()),
+            }
         })
     }
 }
@@ -278,33 +285,12 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("columns: {:?}", resolved.columns);
 
-    let mut string = String::from("<table><thead>");
-
-    for col_idx in 0..resolved.resolved.column_count {
-        let column: &DuckDBColumn = resolved.column(col_idx);
-
-        string += format!(
-            "<td>{}: {:?}</td>",
-            CStr::from_ptr(column.name).to_string_lossy(),
-            column.type_
-        )
-        .as_str();
-    }
-
-    string += "</thead><tbody>";
-
-    for row in 0..resolved.resolved.row_count {
-        string += "<tr>";
-        for col in 0..resolved.resolved.column_count {
-            let thingy = resolved.consume(col, row)?;
-
-            string += format!("<td>{}</td>", thingy.to_string()).as_str();
-        }
-        string += "</tr>";
-    }
-    string += "</tbody></table>";
-
+    let table = Table {
+        resolved: &resolved,
+    };
+    let string = html! { <>{table}</> };
     println!("{}", string);
+
     set_body_html(string);
 
     duckdb_destroy_result(result);
@@ -389,5 +375,20 @@ speculate! {
         let value = duckdb_timestamp::new(duckdb_date::new(1996, 8, 7), duckdb_time::new(12, 10, 0, 0));
 
         assert_eq!(value.to_string(), "1996-08-07T12:10:00.0");
+    }
+
+    test "html" {
+        use render::{component, rsx, html};
+
+        #[component]
+        fn Heading<'title>(title: &'title str) {
+              rsx! { <h1 class={"title"}>{title}</h1> }
+        }
+
+        let rendered_html = html! {
+              <Heading title={"Hello world!"} />
+        };
+
+        assert_eq!(rendered_html, r#"<h1 class="title">Hello world!</h1>"#);
     }
 }

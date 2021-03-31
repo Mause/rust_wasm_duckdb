@@ -9,6 +9,8 @@ which = "*"
 
 [dependencies]
 libc = "*"
+render = "*"
+strum_macros = "0.20.1"
 
 [dev-dependencies]
 speculate = "*"
