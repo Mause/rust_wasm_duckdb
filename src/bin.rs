@@ -14,12 +14,13 @@ use crate::types::duckdb_date;
 use std::alloc::{alloc, Layout};
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
+use strum_macros::IntoStaticStr;
 
 mod state;
 mod types;
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IntoStaticStr, Clone, Copy)]
 pub enum DuckDBType {
     DuckDBTypeInvalid = 0,
     // bool
@@ -52,6 +53,7 @@ pub enum DuckDBType {
     DuckDBTypeBlob = 14,
 }
 
+#[derive(Debug, IntoStaticStr)]
 enum DbType {
     Integer(i64),
     Float(f32),
@@ -212,6 +214,7 @@ fn set_page_title(string: String) -> i32 {
     jse!(b"document.title = UTF8ToString($0, 1000);\x00", input)
 }
 
+#[derive(Debug)]
 struct ResolvedResult<'a> {
     result: *const DuckDBResult,
     resolved: &'a DuckDBResult,
