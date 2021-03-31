@@ -240,23 +240,25 @@ impl<'a> ResolvedResult<'a> {
         &self.columns[<usize as TryFrom<i64>>::try_from(col).expect("Too big")]
     }
 
-    unsafe fn consume(&self, col: i64, row: i64) -> Result<DbType, Box<dyn std::error::Error>> {
+    fn consume(&self, col: i64, row: i64) -> Result<DbType, Box<dyn std::error::Error>> {
         use crate::DuckDBType::*;
 
         let column: &DuckDBColumn = self.column(col);
         let result = self.result;
 
-        Ok(match &column.type_ {
-            DuckDBTypeInteger => DbType::Integer(duckdb_value_int64(result, col, row)),
-            DuckDBTypeDate => DbType::Date(duckdb_value_date(result, col, row)),
-            DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
-            DuckDBTypeDouble => DbType::Double(duckdb_value_double(result, col, row)),
-            DuckDBTypeVarchar => DbType::String(
-                CStr::from_ptr(duckdb_value_varchar(result, col, row))
-                    .to_string_lossy()
-                    .to_string(),
-            ),
-            _ => DbType::Unknown("unknown".to_string()),
+        Ok(unsafe {
+            match &column.type_ {
+                DuckDBTypeInteger => DbType::Integer(duckdb_value_int64(result, col, row)),
+                DuckDBTypeDate => DbType::Date(duckdb_value_date(result, col, row)),
+                DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
+                DuckDBTypeDouble => DbType::Double(duckdb_value_double(result, col, row)),
+                DuckDBTypeVarchar => DbType::String(
+                    CStr::from_ptr(duckdb_value_varchar(result, col, row))
+                        .to_string_lossy()
+                        .to_string(),
+                ),
+                _ => DbType::Unknown("unknown".to_string()),
+            }
         })
     }
 }
