@@ -375,6 +375,10 @@ speculate! {
         jse!(b"global.document = {body: {}};\x00");
     }
 
+    after {
+        jse!(b"delete global.document;\x00");
+    }
+
     test "works" {
         main().unwrap();
     }
