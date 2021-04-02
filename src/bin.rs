@@ -121,7 +121,7 @@ extern "C" {
 
     fn duckdb_disconnect(con: *const Connection);
 
-    fn duckdb_close(db: *const Database);
+    fn ext_duckdb_close(db: *const Database);
 
     fn duckdb_query(
         con: *const Connection,
@@ -293,7 +293,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("DB open");
 
-    let s = CString::new("SELECT 4,2").expect("string");
+    let s = CString::new("select 42 as the_meaning_of_life, random() as randy").expect("string");
 
     let result = malloc(PTR);
     let status = query(database, s.as_ptr(), result);
@@ -314,7 +314,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     duckdb_destroy_result(result);
 
-    duckdb_close(database);
+    ext_duckdb_close(database);
 
     Ok(())
 }
