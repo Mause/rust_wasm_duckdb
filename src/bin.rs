@@ -63,7 +63,7 @@ enum DbType {
     Date(*const duckdb_date),
     Double(f64),
     String(String),
-    Unknown(String),
+    Unknown(DuckDBType),
 }
 impl ToString for DbType {
     fn to_string(&self) -> String {
@@ -78,7 +78,7 @@ impl ToString for DbType {
             Float(f) => f,
             Double(f) => f,
             String(s) => s,
-            Unknown(s) => s,
+            Unknown(_) => &"unknown",
             Date(_) => panic!("Should not get here"),
         };
 
@@ -278,7 +278,7 @@ impl<'a> ResolvedResult<'a> {
                         .to_string_lossy()
                         .to_string(),
                 ),
-                _ => DbType::Unknown("unknown".to_string()),
+                _ => DbType::Unknown(column.type_.clone()),
             }
         })
     }
