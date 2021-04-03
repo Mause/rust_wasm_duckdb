@@ -309,7 +309,8 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("DB open");
 
-    let s = CString::new("select 42 as the_meaning_of_life, random() as randy").expect("string");
+    let s = CString::new("select 42 as the_meaning_of_life, random() as randy, now() as nao, current_time as thime, current_date as daet")
+        .expect("string");
 
     let result = malloc(PTR);
     let status = query(database, s.as_ptr(), result);
