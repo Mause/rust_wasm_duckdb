@@ -3,7 +3,7 @@ use crate::{
 };
 use std::ffi::{CStr, CString};
 
-struct DB {
+pub struct DB {
     db: *const Database,
 }
 impl DB {
@@ -24,7 +24,7 @@ impl DB {
     }
 }
 impl DB {
-    pub fn query(&self, que: String) -> Result<ResolvedResult, Box<dyn std::error::Error>> {
+    pub fn query(&self, que: &str) -> Result<ResolvedResult, Box<dyn std::error::Error>> {
         unsafe {
             let s = CString::new(que).expect("string");
 
@@ -34,9 +34,7 @@ impl DB {
             if matches!(status, DuckDBState::DuckDBError) {
                 let error_message = CStr::from_ptr((*result).error_message).to_string_lossy();
 
-                let error_message: &str = (&*error_message);
-
-                Err(string_error::new_err(error_message))
+                Err(string_error::new_err(&*error_message))
             } else {
                 Ok(ResolvedResult::new(result))
             }
