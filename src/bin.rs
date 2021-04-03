@@ -11,6 +11,7 @@ use count_tts::count_tts;
 use libc::c_void;
 #[allow(non_camel_case_types)]
 pub type c_char = i8;
+use crate::db::DB;
 use crate::rendering::Table;
 use crate::types::{duckdb_date, duckdb_time, duckdb_timestamp};
 use render::html;
@@ -309,21 +310,11 @@ impl<'a> ResolvedResult<'a> {
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     set_page_title("DuckDB Test".to_string());
 
-    let database = malloc(PTR);
-    let path = CString::new("db.db").unwrap();
-    duckdb_open(path.as_ptr(), database)?;
+    let database = DB::new(Some("db.db"))?;
 
     println!("DB open");
 
-    let s = CString::new("select 42 as the_meaning_of_life, random() as randy, now() as nao, current_time as thime, current_date as daet")
-        .expect("string");
-
-    let result = malloc(PTR);
-    let status = query(database, s.as_ptr(), result);
-    println!("status: {}", status);
-    status?;
-
-    let resolved = ResolvedResult::new(result);
+    let resolved = database.query("select 42 as the_meaning_of_life, random() as randy, now() as nao, current_time as thime, current_date as daet")?;
 
     println!("columns: {:?}", resolved.columns);
 
@@ -334,8 +325,6 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", string);
 
     set_body_html(string);
-
-    ext_duckdb_close(database);
 
     Ok(())
 }
