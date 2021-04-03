@@ -60,9 +60,9 @@ pub enum DuckDBType {
 enum DbType {
     Integer(i64),
     Float(f32),
-    Date(*const duckdb_date),
-    Time(*const duckdb_time),
-    Timestamp(*const duckdb_timestamp),
+    Date(duckdb_date),
+    Time(duckdb_time),
+    Timestamp(duckdb_timestamp),
     Double(f64),
     String(String),
     Unknown(DuckDBType),
@@ -76,9 +76,9 @@ impl ToString for DbType {
             Float(f) => f,
             Double(f) => f,
             String(s) => s,
-            Time(s) => unsafe { s.as_ref().expect("date resolved") },
-            Timestamp(s) => unsafe { s.as_ref().expect("date resolved") },
-            Date(s) => unsafe { s.as_ref().expect("date resolved") },
+            Time(s) => s,
+            Timestamp(s) => s,
+            Date(s) => s,
             Unknown(_) => &"unknown",
         };
 
@@ -276,9 +276,17 @@ impl<'a> ResolvedResult<'a> {
         Ok(unsafe {
             match &column.type_ {
                 DuckDBTypeInteger => DbType::Integer(duckdb_value_int64(result, col, row)),
-                DuckDBTypeTime => DbType::Time(duckdb_value_time(result, col, row)),
-                DuckDBTypeTimestamp => DbType::Timestamp(duckdb_value_timestamp(result, col, row)),
-                DuckDBTypeDate => DbType::Date(duckdb_value_date(result, col, row)),
+                DuckDBTypeTime => {
+                    DbType::Time(*duckdb_value_time(result, col, row).as_ref().expect("Time"))
+                }
+                DuckDBTypeTimestamp => DbType::Timestamp(
+                    *duckdb_value_timestamp(result, col, row)
+                        .as_ref()
+                        .expect("Timestamp"),
+                ),
+                DuckDBTypeDate => {
+                    DbType::Date(*duckdb_value_date(result, col, row).as_ref().expect("Date"))
+                }
                 DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
                 DuckDBTypeDouble => DbType::Double(duckdb_value_double(result, col, row)),
                 DuckDBTypeVarchar => DbType::String(
