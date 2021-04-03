@@ -11,6 +11,7 @@ which = "*"
 count_tts = "*"
 libc = "*"
 render = "*"
+string-error = "0.1.0"
 strum_macros = "0.20.1"
 
 [dev-dependencies]
