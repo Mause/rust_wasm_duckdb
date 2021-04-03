@@ -176,6 +176,7 @@ dependencies = [
  "render",
  "shellexpand",
  "speculate",
+ "string-error",
  "strum_macros",
  "which",
 ]
@@ -200,6 +201,12 @@ dependencies = [
  "syn 0.14.9",
  "unicode-xid 0.1.0",
 ]
+
+[[package]]
+name = "string-error"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "439558b73299d7afdf52c36399c3c812cca10fe5ca08429f38815df5bacf3ef7"
 
 [[package]]
 name = "strum_macros"
