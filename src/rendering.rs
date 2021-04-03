@@ -1,5 +1,5 @@
 use crate::{DbType, DuckDBColumn, ResolvedResult};
-use render::{component, rsx, Render, SimpleElement};
+use render::{component, rsx, Render};
 use std::ffi::CStr;
 
 struct Container<T: Render>(Vec<T>);
