@@ -248,6 +248,11 @@ pub struct ResolvedResult<'a> {
     columns: Vec<DuckDBColumn>,
     length: usize,
 }
+impl<'a> Drop for ResolvedResult<'a> {
+    fn drop(&mut self) {
+        unsafe { duckdb_destroy_result(self.result) };
+    }
+}
 impl<'a> ResolvedResult<'a> {
     unsafe fn new(result: *const DuckDBResult) -> Self {
         let resolved = &*result;
@@ -328,8 +333,6 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", string);
 
     set_body_html(string);
-
-    duckdb_destroy_result(result);
 
     ext_duckdb_close(database);
 
