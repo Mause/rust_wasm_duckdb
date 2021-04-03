@@ -388,15 +388,17 @@ extern "C"
 
     duckdb_date *duckdb_value_date(duckdb_result *result, idx_t col, idx_t row)
     {
-        Value val = GetCValue(result, col, row);
-        if (val.is_null)
-        {
-            return nullptr;
-        }
-        else
-        {
-            return val.GetValue<duckdb_date *>();
-        }
+        return &((duckdb_date *)result->columns[col].data)[row];
+    }
+
+    duckdb_time *duckdb_value_time(duckdb_result *result, idx_t col, idx_t row)
+    {
+        return &((duckdb_time *)result->columns[col].data)[row];
+    }
+
+    duckdb_timestamp *duckdb_value_timestamp(duckdb_result *result, idx_t col, idx_t row)
+    {
+        return &((duckdb_timestamp *)result->columns[col].data)[row];
     }
 
     void ext_duckdb_close(duckdb_database *database) {
