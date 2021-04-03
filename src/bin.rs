@@ -12,7 +12,7 @@ use libc::c_void;
 #[allow(non_camel_case_types)]
 pub type c_char = i8;
 use crate::rendering::Table;
-use crate::types::duckdb_date;
+use crate::types::{duckdb_date, duckdb_time, duckdb_timestamp};
 use render::html;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
@@ -61,6 +61,8 @@ enum DbType {
     Integer(i64),
     Float(f32),
     Date(*const duckdb_date),
+    Time(*const duckdb_time),
+    Timestamp(*const duckdb_timestamp),
     Double(f64),
     String(String),
     Unknown(DuckDBType),
@@ -69,17 +71,15 @@ impl ToString for DbType {
     fn to_string(&self) -> String {
         use crate::DbType::*;
 
-        if let Date(s) = self {
-            return unsafe { s.as_ref().expect("date resolved") }.to_string();
-        }
-
         let value: &dyn ToString = match self {
             Integer(i) => i,
             Float(f) => f,
             Double(f) => f,
             String(s) => s,
+            Time(s) => unsafe { s.as_ref().expect("date resolved") },
+            Timestamp(s) => unsafe { s.as_ref().expect("date resolved") },
+            Date(s) => unsafe { s.as_ref().expect("date resolved") },
             Unknown(_) => &"unknown",
-            Date(_) => panic!("Should not get here"),
         };
 
         value.to_string()
@@ -160,6 +160,12 @@ extern "C" {
     fn duckdb_value_blob(result: *const DuckDBResult, col: i64, row: i64) -> *const DuckDBBlob;
 
     fn duckdb_value_date(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_date;
+    fn duckdb_value_time(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_time;
+    fn duckdb_value_timestamp(
+        result: *const DuckDBResult,
+        col: i64,
+        row: i64,
+    ) -> *const duckdb_timestamp;
 
     fn query(db: *const Database, query: *const c_char, result: *const DuckDBResult)
         -> DuckDBState;
@@ -270,6 +276,8 @@ impl<'a> ResolvedResult<'a> {
         Ok(unsafe {
             match &column.type_ {
                 DuckDBTypeInteger => DbType::Integer(duckdb_value_int64(result, col, row)),
+                DuckDBTypeTime => DbType::Time(duckdb_value_time(result, col, row)),
+                DuckDBTypeTimestamp => DbType::Timestamp(duckdb_value_timestamp(result, col, row)),
                 DuckDBTypeDate => DbType::Date(duckdb_value_date(result, col, row)),
                 DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
                 DuckDBTypeDouble => DbType::Double(duckdb_value_double(result, col, row)),
