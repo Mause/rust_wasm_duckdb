@@ -1,3 +1,6 @@
+[env]
+EMMAKEN_CFLAGS = "-s ERROR_ON_UNDEFINED_SYMBOLS=0"
+
 [tasks.build]
 clear = true
 dependencies = ['prebuild']
