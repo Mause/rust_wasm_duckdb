@@ -2,7 +2,7 @@
 macro_rules! jse {
     ($js_expr:expr, $( $i:ident ),*) => {
         {
-            const LEN: usize = count_tts!($($i)*);
+            const LEN: usize = count_tts::count_tts!($($i)*);
 
             #[repr(C, align(16))]
             struct AlignToSixteen([i32; LEN]);

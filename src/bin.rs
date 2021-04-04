@@ -7,7 +7,6 @@
 use speculate::speculate;
 
 use crate::state::DuckDBState;
-use count_tts::count_tts;
 use libc::c_void;
 #[allow(non_camel_case_types)]
 pub type c_char = i8;
