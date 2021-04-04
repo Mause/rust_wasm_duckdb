@@ -1,4 +1,5 @@
-use crate::{c_char, emscripten_asm_const_int, hook, jse, main};
+use crate::jse;
+use crate::{c_char, duckdb_timestamp, emscripten_asm_const_int, hook, main};
 use speculate::speculate;
 use std::ffi::{CStr, CString};
 

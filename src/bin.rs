@@ -3,9 +3,6 @@
 #![feature(static_nobundle)]
 #![feature(proc_macro_hygiene)]
 
-#[cfg(test)]
-use speculate::speculate;
-
 use crate::state::DuckDBState;
 use libc::c_void;
 #[allow(non_camel_case_types)]
