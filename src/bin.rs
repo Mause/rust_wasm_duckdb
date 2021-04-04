@@ -287,6 +287,9 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     set_body_html(string);
 
+    drop(resolved);
+    drop(database);
+
     Ok(())
 }
 
