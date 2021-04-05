@@ -282,7 +282,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let table = Table {
         resolved: &resolved,
     };
-    let string = html! { <>table</> };
+    let string = html! { <>{table}</> };
     println!("{}", string);
 
     set_body_html(string);
