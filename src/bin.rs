@@ -4,7 +4,6 @@
 #![feature(proc_macro_hygiene)]
 
 use crate::state::DuckDBState;
-use count_tts::count_tts;
 use libc::c_void;
 #[allow(non_camel_case_types)]
 pub type c_char = i8;
@@ -181,7 +180,7 @@ extern "C" {
     pub fn mallocy() -> *const c_void;
 }
 
-fn malloc<T: Sized>(size: usize) -> *const T {
+fn malloc<T: Sized>(_size: usize) -> *const T {
     unsafe { mallocy() as *const T }
 }
 
@@ -262,7 +261,7 @@ impl<'a> ResolvedResult<'a> {
                         .to_string_lossy()
                         .to_string(),
                 ),
-                _ => DbType::Unknown(column.type_.clone()),
+                _ => DbType::Unknown(column.type_),
             }
         })
     }
