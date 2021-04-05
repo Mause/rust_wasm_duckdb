@@ -180,7 +180,7 @@ extern "C" {
     pub fn mallocy() -> *const c_void;
 }
 
-fn malloc<T: Sized>(size: usize) -> *const T {
+fn malloc<T: Sized>(_size: usize) -> *const T {
     unsafe { mallocy() as *const T }
 }
 
@@ -261,7 +261,7 @@ impl<'a> ResolvedResult<'a> {
                         .to_string_lossy()
                         .to_string(),
                 ),
-                _ => DbType::Unknown(column.type_.clone()),
+                _ => DbType::Unknown(column.type_),
             }
         })
     }
