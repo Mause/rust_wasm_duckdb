@@ -1,5 +1,5 @@
 use crate::{DbType, DuckDBColumn, ResolvedResult};
-use render::{component, rsx, Render, SimpleElement};
+use render::{component, rsx, Render};
 use std::ffi::CStr;
 
 struct Container<T: Render>(Vec<T>);
@@ -49,7 +49,7 @@ pub fn Table<'a>(resolved: &'a ResolvedResult<'a>) -> render::SimpleElement {
                                 .map(|col| {
                                     let value = resolved.consume(col, row).expect("consume");
 
-                                    rsx!{<td>{value}</td>}
+                                    rsx!{<td>value</td>}
                                 })
                                 .collect()
                             )
@@ -62,8 +62,8 @@ pub fn Table<'a>(resolved: &'a ResolvedResult<'a>) -> render::SimpleElement {
 
     rsx! {
         <table>
-            <thead>{head}</thead>
-            <tbody>{body}</tbody>
+            <thead>head</thead>
+            <tbody>body</tbody>
         </table>
     }
 }
