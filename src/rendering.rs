@@ -1,6 +1,21 @@
 use crate::{DbType, DuckDBColumn, ResolvedResult};
-use render::{component, rsx, Render, SimpleElement};
+use render::{component, rsx, Render};
 use std::ffi::CStr;
+use std::iter::{FromIterator, Map};
+
+trait Contain<I: Render> {
+    fn contain(self) -> Container<I>;
+}
+
+impl<B: Render, I: DoubleEndedIterator, F> Contain<B> for Map<I, F>
+where
+    F: FnMut(I::Item) -> B,
+    Vec<B>: FromIterator<B>,
+{
+    fn contain(self) -> Container<B> {
+        Container(self.collect::<Vec<B>>())
+    }
+}
 
 struct Container<T: Render>(Vec<T>);
 impl<T: Render> Render for Container<T> {
@@ -24,7 +39,7 @@ impl Render for DbType {
 
 #[component]
 pub fn Table<'a>(resolved: &'a ResolvedResult<'a>) -> render::SimpleElement {
-    let head: Vec<_> = (0..resolved.resolved.column_count)
+    let head = (0..resolved.resolved.column_count)
         .map(|col_idx| {
             let column: &DuckDBColumn = resolved.column(col_idx);
             let name = unsafe { CStr::from_ptr(column.name) }
@@ -34,31 +49,27 @@ pub fn Table<'a>(resolved: &'a ResolvedResult<'a>) -> render::SimpleElement {
 
             rsx! { <td>{name}{": "}{type_}</td> }
         })
-        .collect();
+        .contain();
 
-    let head = Container(head);
+    let body = (0..resolved.resolved.row_count)
+        .map(|row| {
+            rsx! {
+                <tr>
+                    {
+                        (
+                            (0..resolved.resolved.column_count)
+                            .map(|col| {
+                                let value = resolved.consume(col, row).expect("consume");
 
-    let body = Container(
-        (0..resolved.resolved.row_count)
-            .map(|row| {
-                rsx! {
-                    <tr>
-                        {
-                            Container(
-                                (0..resolved.resolved.column_count)
-                                .map(|col| {
-                                    let value = resolved.consume(col, row).expect("consume");
-
-                                    rsx!{<td>{value}</td>}
-                                })
-                                .collect()
-                            )
-                    }
-                    </tr>
+                                rsx!{<td>{value}</td>}
+                            })
+                            .contain()
+                        )
                 }
-            })
-            .collect(),
-    );
+                </tr>
+            }
+        })
+        .contain();
 
     rsx! {
         <table>
