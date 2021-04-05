@@ -53,6 +53,7 @@ jobs:
       with:
         command: install
         args: cargo-web
+        use-tool-cache: true
     - name: Install openssl
       run: |
         sudo apt update
