@@ -20,6 +20,7 @@ jobs:
         toolchain: nightly
         components: clippy
         override: true
+        target: wasm32-unknown-emscripten
     - uses: actions-rs/clippy-check@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
