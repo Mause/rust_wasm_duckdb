@@ -1,18 +1,31 @@
 #![feature(extern_types)]
 #![feature(try_trait)]
 #![feature(static_nobundle)]
+#![feature(proc_macro_hygiene)]
 
 use crate::state::DuckDBState;
+use count_tts::count_tts;
 use libc::c_void;
+#[allow(non_camel_case_types)]
 pub type c_char = i8;
-use std::alloc::{alloc, Layout};
+use crate::db::DB;
+use crate::rendering::Table;
+use crate::types::{duckdb_date, duckdb_time, duckdb_timestamp};
+use render::html;
 use std::convert::{TryFrom, TryInto};
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
+use strum_macros::IntoStaticStr;
 
+mod db;
+mod jse;
+mod rendering;
 mod state;
+#[cfg(test)]
+mod tests;
+mod types;
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, IntoStaticStr, Clone, Copy)]
 pub enum DuckDBType {
     DuckDBTypeInvalid = 0,
     // bool
@@ -43,6 +56,36 @@ pub enum DuckDBType {
     DuckDBTypeVarchar = 13,
     // duckdb_blob
     DuckDBTypeBlob = 14,
+}
+
+#[derive(Debug, IntoStaticStr)]
+enum DbType {
+    Integer(i64),
+    Float(f32),
+    Date(duckdb_date),
+    Time(duckdb_time),
+    Timestamp(duckdb_timestamp),
+    Double(f64),
+    String(String),
+    Unknown(DuckDBType),
+}
+impl ToString for DbType {
+    fn to_string(&self) -> String {
+        use crate::DbType::*;
+
+        let value: &dyn ToString = match self {
+            Integer(i) => i,
+            Float(f) => f,
+            Double(f) => f,
+            String(s) => s,
+            Time(s) => s,
+            Timestamp(s) => s,
+            Date(s) => s,
+            Unknown(_) => &"unknown",
+        };
+
+        value.to_string()
+    }
 }
 
 #[repr(C)]
@@ -80,7 +123,7 @@ extern "C" {
 
     fn duckdb_disconnect(con: *const Connection);
 
-    fn duckdb_close(db: *const Database);
+    fn ext_duckdb_close(db: *const Database);
 
     fn duckdb_query(
         con: *const Connection,
@@ -109,146 +152,143 @@ extern "C" {
     /// Converts the specified value to an uint64_t. Returns 0 on failure or NULL.
     fn duckdb_value_uint64(result: *const DuckDBResult, col: i64, row: i64) -> u64;
     /// Converts the specified value to a float. Returns 0.0 on failure or NULL.
-    // fn duckdb_value_float(result: *const DuckDBResult, col: i64, row: i64) -> float;
+    fn duckdb_value_float(result: *const DuckDBResult, col: i64, row: i64) -> f32;
     /// Converts the specified value to a double. Returns 0.0 on failure or NULL.
-    // fn duckdb_value_double(result: *const DuckDBResult, col: i64, row: i64) -> double;
+    fn duckdb_value_double(result: *const DuckDBResult, col: i64, row: i64) -> f64;
     /// Converts the specified value to a string. Returns nullptr on failure or NULL. The result must be freed with free.
     fn duckdb_value_varchar(result: *const DuckDBResult, col: i64, row: i64) -> *const c_char;
     /// Fetches a blob from a result set column. Returns a blob with blob.data set to nullptr on failure or NULL. The
     /// resulting "blob.data" must be freed with free.
     fn duckdb_value_blob(result: *const DuckDBResult, col: i64, row: i64) -> *const DuckDBBlob;
 
+    fn duckdb_value_date(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_date;
+    fn duckdb_value_time(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_time;
+    fn duckdb_value_timestamp(
+        result: *const DuckDBResult,
+        col: i64,
+        row: i64,
+    ) -> *const duckdb_timestamp;
+
     fn query(db: *const Database, query: *const c_char, result: *const DuckDBResult)
         -> DuckDBState;
-}
 
-fn malloc<T: Sized>(size: usize) -> *const T {
-    unsafe { alloc(Layout::from_size_align(size, 8).expect("FUck")) as *const T }
-}
-
-static PTR: usize = core::mem::size_of::<i32>();
-
-extern "C" {
     pub fn emscripten_asm_const_int(
         code: *const u8,
         sigPtr: *const u8,
         argBuf: *const u8,
     ) -> *mut u8;
+
+    pub fn mallocy() -> *const c_void;
 }
 
-#[repr(C, align(16))]
-struct AlignToSixteen([i32; 1]);
+fn malloc<T: Sized>(size: usize) -> *const T {
+    unsafe { mallocy() as *const T }
+}
 
-fn call(string: String) -> i32 {
-    const SNIPPET: &'static [u8] =
-        b"let i = arguments[0]; document.body.innerHTML = UTF8ToString(i, 1000); return i;\x00";
+static PTR: usize = core::mem::size_of::<i32>();
 
-    let sig = "i\x00";
-
+fn set_body_html(string: String) -> i32 {
     let cstring = CString::new(string).expect("string");
     let input = cstring.as_ptr() as *const _ as i32;
 
-    unsafe {
-        emscripten_asm_const_int(
-            SNIPPET as *const _ as *const u8,
-            sig as *const _ as *const u8,
-            &AlignToSixteen([input]) as *const _ as *const u8,
-        ) as i32
+    jse!(
+        b"document.body.innerHTML = UTF8ToString($0, 1000);\x00",
+        input
+    )
+}
+
+fn set_page_title(string: String) -> i32 {
+    let cstring = CString::new(string).expect("string");
+    let input = cstring.as_ptr() as *const _ as i32;
+
+    jse!(b"document.title = UTF8ToString($0, 1000);\x00", input)
+}
+
+#[derive(Debug)]
+pub struct ResolvedResult<'a> {
+    result: *const DuckDBResult,
+    resolved: &'a DuckDBResult,
+    columns: Vec<DuckDBColumn>,
+    length: usize,
+}
+impl<'a> Drop for ResolvedResult<'a> {
+    fn drop(&mut self) {
+        unsafe { duckdb_destroy_result(self.result) };
+    }
+}
+impl<'a> ResolvedResult<'a> {
+    unsafe fn new(result: *const DuckDBResult) -> Self {
+        let resolved = &*result;
+
+        let length = resolved.column_count.try_into().expect("Too many columns");
+        let columns: Vec<DuckDBColumn> = Vec::from_raw_parts(resolved.columns, length, length);
+
+        Self {
+            result,
+            resolved,
+            columns,
+            length,
+        }
+    }
+
+    fn column(&self, col: i64) -> &DuckDBColumn {
+        &self.columns[<usize as TryFrom<i64>>::try_from(col).expect("Too big")]
+    }
+
+    fn consume(&self, col: i64, row: i64) -> Result<DbType, Box<dyn std::error::Error>> {
+        use crate::DuckDBType::*;
+
+        let column: &DuckDBColumn = self.column(col);
+        let result = self.result;
+
+        Ok(unsafe {
+            match &column.type_ {
+                DuckDBTypeInteger => DbType::Integer(duckdb_value_int64(result, col, row)),
+                DuckDBTypeTime => {
+                    DbType::Time(*duckdb_value_time(result, col, row).as_ref().expect("Time"))
+                }
+                DuckDBTypeTimestamp => DbType::Timestamp(
+                    *duckdb_value_timestamp(result, col, row)
+                        .as_ref()
+                        .expect("Timestamp"),
+                ),
+                DuckDBTypeDate => {
+                    DbType::Date(*duckdb_value_date(result, col, row).as_ref().expect("Date"))
+                }
+                DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
+                DuckDBTypeDouble => DbType::Double(duckdb_value_double(result, col, row)),
+                DuckDBTypeVarchar => DbType::String(
+                    CStr::from_ptr(duckdb_value_varchar(result, col, row))
+                        .to_string_lossy()
+                        .to_string(),
+                ),
+                _ => DbType::Unknown(column.type_.clone()),
+            }
+        })
     }
 }
 
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
-    let database = malloc(PTR);
-    let path = CString::new("db.db").unwrap();
-    duckdb_open(path.as_ptr(), database)?;
+    set_page_title("DuckDB Test".to_string());
+
+    let database = DB::new(Some("db.db"))?;
 
     println!("DB open");
 
-    let s = CString::new("SELECT 42").expect("string");
+    let resolved = database.query("select 42 as the_meaning_of_life, random() as randy, now() as nao, current_time as thime, current_date as daet")?;
 
-    let result = malloc(PTR);
-    let status = query(database, s.as_ptr(), result);
-    println!("status: {}", status);
-    status?;
-    let resolved = &*result;
+    println!("columns: {:?}", resolved.columns);
 
-    println!("result: {:?}", resolved);
-
-    let length = resolved.column_count.try_into()?;
-    let columns: Vec<DuckDBColumn> = Vec::from_raw_parts(resolved.columns, length, length);
-
-    println!("columns: {:?}", columns);
-    
-    let mut string = String::from(
-        "<table>
-        <thead>
-        <td>val</td>
-        <td>value</td>
-        <td>name</td>
-        </thead>
-        <tbody>");
-
-    for row_idx in 0..resolved.row_count {
-        for col_idx in 0..resolved.column_count {
-            let rval = duckdb_value_int32(result, col_idx, row_idx);
-
-            let column: &DuckDBColumn = &columns[<usize as TryFrom<i64>>::try_from(col_idx)?];
-
-            string += format!(
-                "<tr><td>{:?}</td><td>{:?}</td><td>{:?}</td></tr>",
-                column,
-                rval,
-                std::ffi::CStr::from_ptr(column.name)
-            ).as_str();
-        }
-    }
-
-    string += "</tbody></table>";
-    
+    let table = Table {
+        resolved: &resolved,
+    };
+    let string = html! { <>{table}</> };
     println!("{}", string);
-    call(string);
 
-    duckdb_destroy_result(result);
+    set_body_html(string);
 
-    duckdb_close(database);
-
-    Ok(())
-}
-
-unsafe fn other() -> Result<(), Box<dyn std::error::Error>> {
-    let database = malloc(PTR);
-    duckdb_open(std::ptr::null(), database)?;
-
-    let connection: *const Connection = malloc(PTR);
-    duckdb_connect(database, connection)?;
-    println!("{:?} {:?}", database, connection);
-
-    println!("building string");
-    let query = CString::new("select 1")?;
-    println!("query: {:?}", query);
-    let result = malloc(PTR);
-    duckdb_query(connection, query.as_ptr(), result)?;
-
-    let rl_res = result.as_ref().expect("res");
-
-    let length = rl_res.column_count.try_into().unwrap();
-    let columns: Vec<DuckDBColumn> = Vec::from_raw_parts(rl_res.columns, length, length);
-
-    println!("{:?}", columns);
-
-    for row_idx in 0..rl_res.row_count {
-        for col_idx in 0..rl_res.column_count {
-            let rval = duckdb_value_varchar(result, col_idx, row_idx);
-            println!("val: {:?}", rval);
-            // _emscripten_builtin_free(rval);
-        }
-        println!("\n");
-    }
-    duckdb_destroy_result(result);
-
-    duckdb_disconnect(connection);
-
-    duckdb_close(database);
+    drop(resolved);
+    drop(database);
 
     Ok(())
 }
@@ -269,8 +309,11 @@ fn hook(info: &std::panic::PanicInfo) {
     // the message's contents, by including the stack in the message
     // contents we make sure it is available to the user.
     msg.push_str("\n\nStack:\n\n");
-    let error = js_sys::Error::new("test1");
-    println!("{:?}", error);
+    // #[cfg(not(test))]
+    // {
+    //     let error = js_sys::Error::new("test1");
+    //     println!("{:?}", error);
+    // }
     // let stack = error.stack();
     // println!("{:?}", stack);
     // msg.push_str(stack.as_str().unwrap_or_default());
@@ -296,26 +339,4 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
-}
-
-#[test]
-fn setup_test() {
-    const SNIPPET: &'static [u8] = b"global.document = {body: {}};\x00";
-
-    let sig = "\x00";
-
-    unsafe {
-        emscripten_asm_const_int(
-            SNIPPET as *const _ as *const u8,
-            sig as *const _ as *const u8,
-            std::ptr::null() as *const _ as *const u8,
-        );
-    }
-}
-
-#[test]
-fn it_works() {
-    setup_test();
-
-    main().unwrap();
 }

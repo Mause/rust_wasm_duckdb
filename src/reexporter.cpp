@@ -341,13 +341,74 @@ idx_t GetCTypeSize(duckdb_type type)
     case DUCKDB_TYPE_INTERVAL:
         return sizeof(duckdb_interval);
     default:
+        std::cout << "Unsupported type: " << type << std::endl;
         // unsupported type
         D_ASSERT(0);
         return sizeof(const char *);
     }
 }
+
+template <class T>
+T UnsafeFetch(duckdb_result *result, idx_t col, idx_t row) {
+	D_ASSERT(row < result->row_count);
+	return ((T *)result->columns[col].data)[row];
+}
+
+static Value GetCValue(duckdb_result *result, idx_t col, idx_t row)
+{
+    if (col >= result->column_count)
+    {
+        return Value();
+    }
+    if (row >= result->row_count)
+    {
+        return Value();
+    }
+    if (result->columns[col].nullmask[row])
+    {
+        return Value();
+    }
+    switch (result->columns[col].type)
+    {
+    case DUCKDB_TYPE_DATE:
+    {
+        auto date = UnsafeFetch<duckdb_date>(result, col, row);
+        return Value::DATE(date.year, date.month, date.day);
+    }
+    default:
+        return Value();
+    }
+}
+
 extern "C"
 {
+    void* mallocy() {
+        return calloc(1, sizeof(void*));
+    }
+
+    duckdb_date *duckdb_value_date(duckdb_result *result, idx_t col, idx_t row)
+    {
+        return &((duckdb_date *)result->columns[col].data)[row];
+    }
+
+    duckdb_time *duckdb_value_time(duckdb_result *result, idx_t col, idx_t row)
+    {
+        return &((duckdb_time *)result->columns[col].data)[row];
+    }
+
+    duckdb_timestamp *duckdb_value_timestamp(duckdb_result *result, idx_t col, idx_t row)
+    {
+        return &((duckdb_timestamp *)result->columns[col].data)[row];
+    }
+
+    void ext_duckdb_close(duckdb_database *database) {
+        if (*database) {
+            auto wrapper = (DatabaseData *)database;
+            delete wrapper;
+            *database = nullptr;
+        }
+    }
+
     duckdb_state query(DatabaseData *db, const char *query, duckdb_result *out)
     {
         duckdb::Connection con(*db->database);
