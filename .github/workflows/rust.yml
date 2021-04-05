@@ -38,22 +38,21 @@ jobs:
     - name: Install latest nightly
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly
+        toolchain: nightly-2021-03-25
         override: true
         components: rustfmt, clippy
         target: wasm32-unknown-emscripten
-    - uses: Swatinem/rust-cache@v1
+    - name: Cache .cargo
+      id: cache-primes
+      uses: actions/cache@v2
+      with:
+        path: ~/.cargo
+        key: ${{ runner.os }}-${{ hashFiles('Cargo**') }}
     - name: Install rust script
-      uses: actions-rs/install@v0.1
+      uses: actions-rs/cargo@v1
       with:
-        crate: rust-script
-        version: latest
-        use-tool-cache: true
-    - name: Install cargo web
-      uses: actions-rs/install@v0.1
-      with:
-        crate: cargo-web
-        version: latest
+        command: install
+        args: cargo-web
         use-tool-cache: true
     - name: Install openssl
       run: |
