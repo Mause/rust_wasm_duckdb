@@ -35,6 +35,13 @@ speculate! {
 
     test "works" {
         main().unwrap();
+
+        let html = get_document_html();
+
+        let resultant = parse(html);
+        let name = &resultant.as_element().expect("as_element").name.local;
+
+        assert_eq!(name, "html");
     }
 
     test "to_string_works" {
