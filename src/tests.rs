@@ -36,6 +36,13 @@ speculate! {
     test "works" {
         main().unwrap();
     }
+    
+    test "timestamp" {
+        duckdb_timestamp::new(
+            duckdb_date::new(2021, 1, 1),
+            duckdb_time::new(11, 13, 0)
+        );
+    }
 
     test "to_string_works" {
         use crate::types::*;
