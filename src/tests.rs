@@ -29,12 +29,6 @@ speculate! {
         jse!(b"global.document = {body: {}};\x00");
     }
 
-    fn get_document_html() -> String {
-        let ptr = jse!(b"return allocateUTF8OnStack(document.body.innerHTML);\x00");
-
-        return unsafe { CStr::from_ptr(ptr as *const c_char) }.to_string_lossy().to_string();
-    }
-
     after {
         jse!(b"delete global.document;\x00");
     }
