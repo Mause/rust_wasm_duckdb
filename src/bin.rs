@@ -336,7 +336,10 @@ fn hook(info: &std::panic::PanicInfo) {
 
 #[no_mangle]
 extern "C" fn callback(query: *const c_char) {
-    println!("you called?: {:?}", unsafe { CStr::from_ptr(query) });
+    println!(
+        "you called?: {}",
+        unsafe { CStr::from_ptr(query) }.to_string_lossy()
+    );
 }
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
