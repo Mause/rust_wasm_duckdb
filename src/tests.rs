@@ -1,7 +1,7 @@
 use crate::jse;
-use crate::{duckdb_timestamp, emscripten_asm_const_int, hook, main};
+use crate::{c_char, duckdb_timestamp, emscripten_asm_const_int, hook, main};
 use speculate::speculate;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 
 fn parse(html: String) -> kuchiki::NodeRef {
     use kuchiki::traits::TendrilSink;
@@ -14,6 +14,12 @@ fn parse(html: String) -> kuchiki::NodeRef {
         .expect("parsing failed");
 
     resultant.first_child().expect("first_child")
+}
+
+fn get_document_html() -> String {
+    let ptr = jse!(b"return allocateUTF8OnStack(document.body.innerHTML);\x00");
+
+    return unsafe { CStr::from_ptr(ptr as *const c_char) }.to_string_lossy().to_string();
 }
 
 speculate! {
