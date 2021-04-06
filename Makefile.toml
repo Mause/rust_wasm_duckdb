@@ -35,4 +35,4 @@ args = ["web", "start"]
 clear = true
 dependencies = ['build']
 command = "cargo"
-args = ["web", "test", "--nodejs", "--use-system-emscripten"]
+args = ["web", "test", "--nodejs", "--use-system-emscripten", "--", "--nocapture"]
