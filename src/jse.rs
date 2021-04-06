@@ -31,7 +31,6 @@ macro_rules! jse {
     };
     ($js_expr:expr) => {
         {
-            println!("EMTPY PATH");
             const SNIPPET: &'static [u8] = $js_expr;
 
             unsafe {
