@@ -27,12 +27,12 @@ macro_rules! jse {
     ($js_expr:expr) => {
         {
             println!("EMTPY PATH");
-            static const SNIPPET: &'static [u8] = $js_expr;
+            static SNIPPET: &'static [u8] = $js_expr;
 
             unsafe {
                 emscripten_asm_const_int(
                     SNIPPET as *const _ as *const u8,
-                    empty_sig.as_ptr() as *const _ as *const u8,
+                    crate::jse::empty_sig.as_ptr() as *const _ as *const u8,
                     std::ptr::null() as *const _ as *const u8,
                 ) as i32
             }
