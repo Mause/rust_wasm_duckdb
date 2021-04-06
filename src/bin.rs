@@ -281,7 +281,12 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let table = Table {
         resolved: &resolved,
     };
-    let string = html! { <>{table}</> };
+    let string = html! {
+        <>
+            <button onclick={"Module.callback()"}>{"Call me"}</button>
+            {table}
+        </>
+    };
     println!("{}", string);
 
     set_body_html(string);
@@ -327,8 +332,10 @@ fn hook(info: &std::panic::PanicInfo) {
     println!("{}", msg);
 }
 
-/// Dummy __gxx_personality_v0 hook
-extern "C" fn ___gxx_personality_v0() {}
+#[no_mangle]
+extern "C" fn callback() {
+    println!("you called?");
+}
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::panic::set_hook(Box::new(hook));
