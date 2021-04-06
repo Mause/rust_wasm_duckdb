@@ -24,7 +24,8 @@ macro_rules! jse {
     };
     ($js_expr:expr) => {
         {
-            let sig = "";
+            println!("EMTPY PATH");
+            let sig = unsafe { CString::from_vec_unchecked(vec![]) };
             const SNIPPET: &'static [u8] = $js_expr;
 
             unsafe {
