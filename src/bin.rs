@@ -282,10 +282,12 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
         resolved: &resolved,
     };
     let string = html! {
-        <>
-            <button onclick={"Module._callback()"}>{"Call me"}</button>
+        <div>
+            <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
+                <input name={"query"}></input>
+            </form>
             {table}
-        </>
+        </div>
     };
     println!("{}", string);
 
@@ -333,8 +335,8 @@ fn hook(info: &std::panic::PanicInfo) {
 }
 
 #[no_mangle]
-extern "C" fn callback() {
-    println!("you called?");
+extern "C" fn callback(query: *const c_char) {
+    println!("you called?: {:?}", unsafe { CStr::from_ptr(query) });
 }
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
