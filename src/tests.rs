@@ -33,12 +33,6 @@ speculate! {
         jse!(b"delete global.document;\x00");
     }
 
-    /*
-    test "timestamp" {
-
-    }
-    */
-
     test "works" {
         main().unwrap();
 
