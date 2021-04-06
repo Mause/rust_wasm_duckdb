@@ -1,4 +1,4 @@
-static empty_sig: std::ffi::CString = unsafe { std::ffi::CString::from_vec_unchecked(vec![]) };
+pub static empty_sig: std::ffi::CString = unsafe { std::ffi::CString::from_vec_unchecked(vec![]) };
 
 #[macro_export]
 macro_rules! jse {
