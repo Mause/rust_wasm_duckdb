@@ -48,11 +48,11 @@ jobs:
       with:
         path: ~/.cargo
         key: ${{ runner.os }}-${{ hashFiles('Cargo**') }}
-    - name: Install cargo web
-      uses: actions-rs/install@v0.1
+    - name: Install rust script
+      uses: actions-rs/cargo@v1
       with:
-        crate: cargo-web
-        version: latest
+        command: install
+        args: cargo-web
         use-tool-cache: true
     - name: Install openssl
       run: |
