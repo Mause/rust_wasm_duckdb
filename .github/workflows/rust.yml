@@ -60,7 +60,7 @@ jobs:
         sudo apt-get install pkg-config build-essential libssl-dev --yes
     - uses: davidB/rust-cargo-make@v1
       with:
-        version: latest
+        version: v0.32.16
     - name: Run CI
       uses: actions-rs/cargo@v1
       with:
