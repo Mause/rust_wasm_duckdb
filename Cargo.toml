@@ -9,6 +9,7 @@ which = "*"
 
 [dependencies]
 count_tts = "*"
+lazy_static = "*"
 libc = "*"
 render = "*"
 string-error = "0.1.0"
