@@ -33,10 +33,6 @@ speculate! {
         jse!(b"delete global.document;\x00");
     }
 
-    test "works" {
-        main().unwrap();
-    }
-    
     test "timestamp" {
         duckdb_timestamp::new(
             duckdb_date::new(2021, 1, 1),
@@ -44,6 +40,10 @@ speculate! {
         );
     }
 
+    test "works" {
+        main().unwrap();
+    }
+    
     test "to_string_works" {
         let value = duckdb_timestamp::new(duckdb_date::new(1996, 8, 7), duckdb_time::new(12, 10, 0, 0));
 
