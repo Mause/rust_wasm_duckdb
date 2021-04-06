@@ -40,12 +40,11 @@ speculate! {
     test "timestamp" {
         duckdb_timestamp::new(
             duckdb_date::new(2021, 1, 1),
-            duckdb_time::new(11, 13, 0)
+            duckdb_time::new(11, 13, 0, 0)
         );
     }
 
     test "to_string_works" {
-        use crate::types::*;
         let value = duckdb_timestamp::new(duckdb_date::new(1996, 8, 7), duckdb_time::new(12, 10, 0, 0));
 
         assert_eq!(value.to_string(), "1996-08-07T12:10:00.0");
