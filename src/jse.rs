@@ -24,7 +24,7 @@ macro_rules! jse {
     };
     ($js_expr:expr) => {
         {
-            let sig = CString::new("").expect("sig");
+            let sig = "";
             const SNIPPET: &'static [u8] = $js_expr;
 
             unsafe {
