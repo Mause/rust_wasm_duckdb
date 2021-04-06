@@ -283,7 +283,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     };
     let string = html! {
         <>
-            <button onclick={"Module.callback()"}>{"Call me"}</button>
+            <button onclick={"Module._callback()"}>{"Call me"}</button>
             {table}
         </>
     };
