@@ -1,5 +1,5 @@
 use crate::jse;
-use crate::{c_char, duckdb_timestamp, emscripten_asm_const_int, hook, main};
+use crate::{c_char, duckdb_timestamp, duckdb_time, duckdb_date, emscripten_asm_const_int, hook, main};
 use speculate::speculate;
 use std::ffi::{CStr, CString};
 
@@ -35,6 +35,13 @@ speculate! {
         jse!(b"delete global.document;\x00");
     }
 
+    test "timestamp" {
+        duckdb_timestamp::new(
+            duckdb_date::new(2021, 1, 1),
+            duckdb_time::new(11, 13, 0, 0)
+        );
+    }
+
     test "works" {
         main().unwrap();
 
@@ -47,7 +54,6 @@ speculate! {
     }
 
     test "to_string_works" {
-        use crate::types::*;
         let value = duckdb_timestamp::new(duckdb_date::new(1996, 8, 7), duckdb_time::new(12, 10, 0, 0));
 
         assert_eq!(value.to_string(), "1996-08-07T12:10:00.0");
