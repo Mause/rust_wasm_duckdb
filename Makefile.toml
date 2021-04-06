@@ -1,5 +1,5 @@
 [env]
-EMMAKEN_CFLAGS = "-s ERROR_ON_UNDEFINED_SYMBOLS=0"
+EMMAKEN_CFLAGS = "-s ERROR_ON_UNDEFINED_SYMBOLS=0 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=33554432"
 
 [tasks.build]
 clear = true
@@ -35,4 +35,4 @@ args = ["web", "start"]
 clear = true
 dependencies = ['build']
 command = "cargo"
-args = ["web", "test", "--nodejs", "--use-system-emscripten"]
+args = ["web", "test", "--nodejs", "--use-system-emscripten", "-v", "--", "--nocapture"]
