@@ -403,7 +403,7 @@ extern "C"
 
     void ext_duckdb_close(duckdb_database *database) {
         if (*database) {
-            auto wrapper = (DatabaseData *)*database;
+            auto wrapper = (DatabaseData *)database;
             delete wrapper;
             *database = nullptr;
         }
