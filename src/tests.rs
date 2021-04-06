@@ -3,7 +3,19 @@ use crate::{duckdb_timestamp, emscripten_asm_const_int, hook, main};
 use speculate::speculate;
 use std::ffi::CString;
 
-#[cfg(test)]
+fn parse(html: String) -> kuchiki::NodeRef {
+    use kuchiki::traits::TendrilSink;
+
+    let mut v = Vec::from(unsafe { html.clone().as_bytes_mut() });
+
+    let resultant = kuchiki::parse_html()
+        .from_utf8()
+        .read_from(&mut std::io::Cursor::new(&mut v))
+        .expect("parsing failed");
+
+    resultant.first_child().expect("first_child")
+}
+
 speculate! {
     before {
         std::panic::set_hook(Box::new(hook));
