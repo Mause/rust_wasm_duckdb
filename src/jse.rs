@@ -1,3 +1,5 @@
+static empty_sig: std::ffi::CString = unsafe { std::ffi::CString::from_vec_unchecked(vec![]) };
+
 #[macro_export]
 macro_rules! jse {
     ($js_expr:expr, $( $i:ident ),*) => {
@@ -25,13 +27,12 @@ macro_rules! jse {
     ($js_expr:expr) => {
         {
             println!("EMTPY PATH");
-            let sig = unsafe { CString::from_vec_unchecked(vec![]) };
-            const SNIPPET: &'static [u8] = $js_expr;
+            static const SNIPPET: &'static [u8] = $js_expr;
 
             unsafe {
                 emscripten_asm_const_int(
                     SNIPPET as *const _ as *const u8,
-                    sig.as_ptr() as *const _ as *const u8,
+                    empty_sig.as_ptr() as *const _ as *const u8,
                     std::ptr::null() as *const _ as *const u8,
                 ) as i32
             }

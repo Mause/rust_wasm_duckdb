@@ -19,7 +19,9 @@ fn parse(html: String) -> kuchiki::NodeRef {
 fn get_document_html() -> String {
     let ptr = jse!(b"return allocateUTF8OnStack(document.body.innerHTML);\x00");
 
-    return unsafe { CStr::from_ptr(ptr as *const c_char) }.to_string_lossy().to_string();
+    return unsafe { CStr::from_ptr(ptr as *const c_char) }
+        .to_string_lossy()
+        .to_string();
 }
 
 speculate! {
