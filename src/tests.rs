@@ -16,6 +16,12 @@ fn parse(html: String) -> kuchiki::NodeRef {
     resultant.first_child().expect("first_child")
 }
 
+fn get_document_html() -> String {
+    let ptr = jse!(b"return allocateUTF8OnStack(document.body.innerHTML);\x00");
+
+    return unsafe { CStr::from_ptr(ptr as *const c_char) }.to_string_lossy().to_string();
+}
+
 speculate! {
     before {
         std::panic::set_hook(Box::new(hook));
