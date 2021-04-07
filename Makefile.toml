@@ -5,7 +5,7 @@ EMMAKEN_CFLAGS = "-s ERROR_ON_UNDEFINED_SYMBOLS=0 -s ALLOW_MEMORY_GROWTH=1 -s TO
 clear = true
 dependencies = ['prebuild']
 command = "cargo"
-args = ["build", "--tests", "--target", "wasm32-unknown-emscripten"]
+args = ["build", "--tests", "--target", "wasm32-unknown-emscripten", "--", "--verbose"]
 
 [tasks.deploy]
 dependencies = ["ci-flow"]
