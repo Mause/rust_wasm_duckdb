@@ -16,7 +16,7 @@ macro_rules! jse {
 
             let array = &AlignToSixteen([$($i,)*]);
             let sig = CString::new("i".repeat(LEN)).expect("sig");
-            #[link_section = ".em_asm"]
+            #[link_section = "em_asm"]
             static SNIPPET: [u8; $js_expr.len()] = *$js_expr;
 
             assert_eq!(SNIPPET[..].last().expect("empty snippet?"), &0);
@@ -32,7 +32,7 @@ macro_rules! jse {
     };
     ($js_expr:expr) => {
         {
-            #[link_section = ".em_asm"]
+            #[link_section = "em_asm"]
             static SNIPPET: [u8; $js_expr.len()] = *$js_expr;
 
             unsafe {
