@@ -3,23 +3,24 @@
 #![feature(static_nobundle)]
 #![feature(proc_macro_hygiene)]
 
-#[cfg(test)]
-use speculate::speculate;
-
 use crate::state::DuckDBState;
-use count_tts::count_tts;
 use libc::c_void;
 #[allow(non_camel_case_types)]
 pub type c_char = i8;
+use crate::db::DB;
 use crate::rendering::Table;
-use crate::types::duckdb_date;
+use crate::types::{duckdb_date, duckdb_time, duckdb_timestamp};
 use render::html;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
 use strum_macros::IntoStaticStr;
 
+mod db;
+mod jse;
 mod rendering;
 mod state;
+#[cfg(test)]
+mod tests;
 mod types;
 
 #[repr(C)]
@@ -60,26 +61,26 @@ pub enum DuckDBType {
 enum DbType {
     Integer(i64),
     Float(f32),
-    Date(*const duckdb_date),
+    Date(duckdb_date),
+    Time(duckdb_time),
+    Timestamp(duckdb_timestamp),
     Double(f64),
     String(String),
-    Unknown(String),
+    Unknown(DuckDBType),
 }
 impl ToString for DbType {
     fn to_string(&self) -> String {
         use crate::DbType::*;
-
-        if let Date(s) = self {
-            return unsafe { s.as_ref().expect("date resolved") }.to_string();
-        }
 
         let value: &dyn ToString = match self {
             Integer(i) => i,
             Float(f) => f,
             Double(f) => f,
             String(s) => s,
-            Unknown(s) => s,
-            Date(_) => panic!("Should not get here"),
+            Time(s) => s,
+            Timestamp(s) => s,
+            Date(s) => s,
+            Unknown(_) => &"unknown",
         };
 
         value.to_string()
@@ -160,6 +161,12 @@ extern "C" {
     fn duckdb_value_blob(result: *const DuckDBResult, col: i64, row: i64) -> *const DuckDBBlob;
 
     fn duckdb_value_date(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_date;
+    fn duckdb_value_time(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_time;
+    fn duckdb_value_timestamp(
+        result: *const DuckDBResult,
+        col: i64,
+        row: i64,
+    ) -> *const duckdb_timestamp;
 
     fn query(db: *const Database, query: *const c_char, result: *const DuckDBResult)
         -> DuckDBState;
@@ -173,50 +180,11 @@ extern "C" {
     pub fn mallocy() -> *const c_void;
 }
 
-fn malloc<T: Sized>(size: usize) -> *const T {
+fn malloc<T: Sized>(_size: usize) -> *const T {
     unsafe { mallocy() as *const T }
 }
 
 static PTR: usize = core::mem::size_of::<i32>();
-
-macro_rules! jse {
-    ($js_expr:expr, $( $i:ident ),*) => {
-        {
-            const LEN: usize = count_tts!($($i)*);
-
-            #[repr(C, align(16))]
-            struct AlignToSixteen([i32; LEN]);
-
-            let array = &AlignToSixteen([$($i,)*]);
-            let sig = CString::new("i".repeat(LEN)).expect("sig");
-            const SNIPPET: &'static [u8] = $js_expr;
-
-            assert_eq!(SNIPPET[..].last().expect("empty snippet?"), &0);
-
-            unsafe {
-                emscripten_asm_const_int(
-                    SNIPPET as *const _ as *const u8,
-                    sig.as_ptr() as *const _ as *const u8,
-                    array as *const _ as *const u8,
-                ) as i32
-            }
-        }
-    };
-    ($js_expr:expr) => {
-        {
-            let sig = CString::new("").expect("sig");
-            const SNIPPET: &'static [u8] = $js_expr;
-
-            unsafe {
-                emscripten_asm_const_int(
-                    SNIPPET as *const _ as *const u8,
-                    sig.as_ptr() as *const _ as *const u8,
-                    std::ptr::null() as *const _ as *const u8,
-                ) as i32
-            }
-        }
-    };
-}
 
 fn set_body_html(string: String) -> i32 {
     let cstring = CString::new(string).expect("string");
@@ -241,6 +209,11 @@ pub struct ResolvedResult<'a> {
     resolved: &'a DuckDBResult,
     columns: Vec<DuckDBColumn>,
     length: usize,
+}
+impl<'a> Drop for ResolvedResult<'a> {
+    fn drop(&mut self) {
+        unsafe { duckdb_destroy_result(self.result) };
+    }
 }
 impl<'a> ResolvedResult<'a> {
     unsafe fn new(result: *const DuckDBResult) -> Self {
@@ -270,7 +243,17 @@ impl<'a> ResolvedResult<'a> {
         Ok(unsafe {
             match &column.type_ {
                 DuckDBTypeInteger => DbType::Integer(duckdb_value_int64(result, col, row)),
-                DuckDBTypeDate => DbType::Date(duckdb_value_date(result, col, row)),
+                DuckDBTypeTime => {
+                    DbType::Time(*duckdb_value_time(result, col, row).as_ref().expect("Time"))
+                }
+                DuckDBTypeTimestamp => DbType::Timestamp(
+                    *duckdb_value_timestamp(result, col, row)
+                        .as_ref()
+                        .expect("Timestamp"),
+                ),
+                DuckDBTypeDate => {
+                    DbType::Date(*duckdb_value_date(result, col, row).as_ref().expect("Date"))
+                }
                 DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
                 DuckDBTypeDouble => DbType::Double(duckdb_value_double(result, col, row)),
                 DuckDBTypeVarchar => DbType::String(
@@ -278,7 +261,7 @@ impl<'a> ResolvedResult<'a> {
                         .to_string_lossy()
                         .to_string(),
                 ),
-                _ => DbType::Unknown("unknown".to_string()),
+                _ => DbType::Unknown(column.type_),
             }
         })
     }
@@ -287,20 +270,11 @@ impl<'a> ResolvedResult<'a> {
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     set_page_title("DuckDB Test".to_string());
 
-    let database = malloc(PTR);
-    let path = CString::new("db.db").unwrap();
-    duckdb_open(path.as_ptr(), database)?;
+    let database = DB::new(Some("db.db"))?;
 
     println!("DB open");
 
-    let s = CString::new("select 42 as the_meaning_of_life, random() as randy").expect("string");
-
-    let result = malloc(PTR);
-    let status = query(database, s.as_ptr(), result);
-    println!("status: {}", status);
-    status?;
-
-    let resolved = ResolvedResult::new(result);
+    let resolved = database.query("select 42 as the_meaning_of_life, random() as randy, now() as nao, current_time as thime, current_date as daet")?;
 
     println!("columns: {:?}", resolved.columns);
 
@@ -312,9 +286,8 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     set_body_html(string);
 
-    duckdb_destroy_result(result);
-
-    ext_duckdb_close(database);
+    drop(resolved);
+    drop(database);
 
     Ok(())
 }
@@ -365,51 +338,4 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
-}
-
-#[cfg(test)]
-speculate! {
-    before {
-        std::panic::set_hook(Box::new(hook));
-
-        jse!(b"global.document = {body: {}};\x00");
-    }
-
-    after {
-        jse!(b"delete global.document;\x00");
-    }
-
-    test "works" {
-        main().unwrap();
-    }
-
-    test "to_string_works" {
-        use crate::types::*;
-        let value = duckdb_timestamp::new(duckdb_date::new(1996, 8, 7), duckdb_time::new(12, 10, 0, 0));
-
-        assert_eq!(value.to_string(), "1996-08-07T12:10:00.0");
-    }
-
-    test "multi args works" {
-        fn addition(a: i32, b: i32) -> i32 {
-            jse!(b"return $0 + $1;\x00", a, b)
-        }
-
-        assert_eq!(addition(10, 12), 22);
-    }
-
-    test "html" {
-        use render::{component, rsx, html};
-
-        #[component]
-        fn Heading<'title>(title: &'title str) {
-              rsx! { <h1 class={"title"}>{title}</h1> }
-        }
-
-        let rendered_html = html! {
-              <Heading title={"Hello world!"} />
-        };
-
-        assert_eq!(rendered_html, r#"<h1 class="title">Hello world!</h1>"#);
-    }
 }

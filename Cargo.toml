@@ -9,11 +9,14 @@ which = "*"
 
 [dependencies]
 count_tts = "*"
+lazy_static = "*"
 libc = "*"
 render = "*"
+string-error = "0.1.0"
 strum_macros = "0.20.1"
 
 [dev-dependencies]
+kuchiki = "0.8.1"
 speculate = "*"
 
 [package]

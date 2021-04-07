@@ -1,3 +1,6 @@
+[env]
+EMMAKEN_CFLAGS = "-s ERROR_ON_UNDEFINED_SYMBOLS=0 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=33554432"
+
 [tasks.build]
 clear = true
 dependencies = ['prebuild']
@@ -9,6 +12,11 @@ dependencies = ["ci-flow"]
 command = "cargo"
 args = ["web", "deploy", "--use-system-emscripten"]
 
+[tasks.docs]
+dependencies = ["prebuild"]
+command = "cargo"
+args = ["doc", "--target", "wasm32-unknown-emscripten", "--bins", "--document-private-items"]
+
 [tasks.expand]
 command = "cargo"
 args = ["expand", "--target", "wasm32-unknown-emscripten", ">", "output.rs"]
@@ -18,8 +26,13 @@ condition = { files_not_exist = ["${CARGO_MAKE_WORKING_DIRECTORY}/target/duckdb.
 script_runner = "@rust"
 script = { file = "setup.rs" }
 
+[tasks.start]
+dependencies = ["prebuild"]
+command = "cargo"
+args = ["web", "start"]
+
 [tasks.test]
 clear = true
 dependencies = ['build']
 command = "cargo"
-args = ["web", "test", "--nodejs", "--use-system-emscripten"]
+args = ["web", "test", "--nodejs", "--use-system-emscripten", "--", "--nocapture"]

@@ -1,7 +1,7 @@
 use std::fmt::{Display, Error, Formatter};
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct duckdb_date {
     year: i32,
     month: i8,
@@ -22,7 +22,7 @@ impl Display for duckdb_date {
 }
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct duckdb_time {
     hour: i8,
     min: i8,
@@ -49,7 +49,7 @@ impl Display for duckdb_time {
 }
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct duckdb_timestamp {
     date: duckdb_date,
     time: duckdb_time,
