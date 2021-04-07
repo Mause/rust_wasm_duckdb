@@ -54,10 +54,10 @@ jobs:
         command: install
         args: cargo-web
         use-tool-cache: true
-    - name: Install openssl
+    - name: Install deps
       run: |
         sudo apt update
-        sudo apt-get install pkg-config build-essential libssl-dev --yes
+        sudo apt-get install pkg-config build-essential libssl-dev binaryen --yes
     - uses: davidB/rust-cargo-make@v1
       with:
         version: 0.32.16
@@ -66,6 +66,7 @@ jobs:
       with:
         command: make
         args: deploy
+    - run: wasm-objdump -j em_asm target/bin.wasm
     - uses: actions/upload-artifact@v2
       if: failure()
       with:
