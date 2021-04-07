@@ -66,7 +66,7 @@ jobs:
       with:
         command: make
         args: deploy
-    - run: wasm-objdump -j em_asm target/bin.wasm
+    - run: wasm-objdump -x -j em_asm target/bin.wasm
     - uses: actions/upload-artifact@v2
       if: failure()
       with:
