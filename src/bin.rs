@@ -281,7 +281,14 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     let table = Table {
         resolved: &resolved,
     };
-    let string = html! { <>{table}</> };
+    let string = html! {
+        <div>
+            <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
+                <input name={"query"}></input>
+            </form>
+            {table}
+        </div>
+    };
     println!("{}", string);
 
     set_body_html(string);
@@ -327,8 +334,13 @@ fn hook(info: &std::panic::PanicInfo) {
     println!("{}", msg);
 }
 
-/// Dummy __gxx_personality_v0 hook
-extern "C" fn ___gxx_personality_v0() {}
+#[no_mangle]
+extern "C" fn callback(query: *const c_char) {
+    println!(
+        "you called?: {}",
+        unsafe { CStr::from_ptr(query) }.to_string_lossy()
+    );
+}
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::panic::set_hook(Box::new(hook));
