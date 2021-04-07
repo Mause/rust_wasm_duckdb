@@ -16,7 +16,8 @@ macro_rules! jse {
 
             let array = &AlignToSixteen([$($i,)*]);
             let sig = CString::new("i".repeat(LEN)).expect("sig");
-            const SNIPPET: &'static [u8] = $js_expr;
+            #[link_section = ".em_asm"]
+            static SNIPPET: &'static [u8] = $js_expr;
 
             assert_eq!(SNIPPET[..].last().expect("empty snippet?"), &0);
 
@@ -31,7 +32,8 @@ macro_rules! jse {
     };
     ($js_expr:expr) => {
         {
-            const SNIPPET: &'static [u8] = $js_expr;
+            #[link_section = ".em_asm"]
+            static SNIPPET: &'static [u8] = $js_expr;
 
             unsafe {
                 emscripten_asm_const_int(
