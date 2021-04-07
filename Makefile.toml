@@ -1,6 +1,5 @@
 [env]
 EMMAKEN_CFLAGS = "-s ERROR_ON_UNDEFINED_SYMBOLS=0 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=33554432 -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=$readAsmConstArgs -sEXTRA_EXPORTED_RUNTIME_METHODS=ccall,cwrap,callback,__start_em_asm,__stop_em_asm -s ASSERTIONS=1 -s SAFE_HEAP=1"
-RUSTFLAGS = "--verbose -Z print-link-args"
 
 [tasks.build]
 clear = true
