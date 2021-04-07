@@ -23,7 +23,7 @@ macro_rules! jse {
 
             unsafe {
                 emscripten_asm_const_int(
-                    &SNIPPET as *const _ as *const u8,
+                    SNIPPET.as_ptr() as *const _ as *const u8,
                     sig.as_ptr() as *const _ as *const u8,
                     array as *const _ as *const u8,
                 ) as i32
@@ -37,7 +37,7 @@ macro_rules! jse {
 
             unsafe {
                 emscripten_asm_const_int(
-                    &SNIPPET as *const _ as *const u8,
+                    SNIPPET.as_ptr() as *const _ as *const u8,
                     crate::jse::empty_sig.as_ptr() as *const _ as *const u8,
                     std::ptr::null() as *const _ as *const u8,
                 ) as i32
