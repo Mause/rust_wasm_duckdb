@@ -66,6 +66,11 @@ jobs:
       with:
         command: make
         args: deploy
+    - uses: actions/upload-artifact@v2
+      if: failure()
+      with:
+        name: target
+        path: target/
     - uses: actions-rs/clippy-check@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
