@@ -280,6 +280,15 @@ use std::thread_local;
 thread_local! {
     static database: RefCell<Option<DB>> = RefCell::new(None);
 }
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref form: render::SimpleElement = rsx! {
+        <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
+            <input autofocus={"true"} name={"query"}></input>
+        </form>
+    };
+}
 
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     set_page_title("DuckDB Test".to_string());
@@ -289,13 +298,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("DB open");
 
-    let string = html! {
-        <div>
-            <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
-                <input name={"query"}></input>
-            </form>
-        </div>
-    };
+    let string = html! { <>{form}</> };
     set_body_html(string);
 
     Ok(())
@@ -341,11 +344,6 @@ extern "C" fn callback(query_: *const c_char) {
     use render::rsx;
     let org = unsafe { CStr::from_ptr(query_) };
     let query = org.to_string_lossy();
-    let form = rsx! {
-        <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
-            <input focussed name={"query"}></input>
-        </form>
-    };
 
     println!("you called?: {} {:?} {:?}", query, org, query_);
 
