@@ -288,7 +288,7 @@ lazy_static! {
         <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
             <input autofocus={"true"} name={"query"}></input>
         </form>
-    }.unwrap("Form");
+    }.expect("Form");
 }
 
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
