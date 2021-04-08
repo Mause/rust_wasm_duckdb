@@ -254,7 +254,7 @@ impl<'a> ResolvedResult<'a> {
                 DuckDBTypeTinyint => DbType::Tinyint(duckdb_value_int8(result, col, row)),
                 DuckDBTypeSmallint => DbType::Smallint(duckdb_value_int16(result, col, row)),
                 DuckDBTypeInteger => DbType::Integer(duckdb_value_int32(result, col, row)),
-                DuckDBTypeBigint => DbType::BigInt(duckdb_value_int64(result, col, row)),
+                DuckDBTypeBigint => DbType::Bigint(duckdb_value_int64(result, col, row)),
                 DuckDBTypeTime => {
                     DbType::Time(*duckdb_value_time(result, col, row).as_ref().expect("Time"))
                 }
