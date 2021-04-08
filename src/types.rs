@@ -20,7 +20,7 @@ pub struct duckdb_hugeint {
 #[derive(Debug, Clone, Copy)]
 pub struct duckdb_blob {
     data: *const c_void,
-    size: i64,
+    pub size: i64,
 }
 
 #[repr(C)]
