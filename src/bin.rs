@@ -93,9 +93,9 @@ impl ToString for DbType {
             Time(s) => s,
             Timestamp(s) => s,
             Date(s) => s,
-            Blob(s) => format!("blob len: {}", s.size),
-            Hugeint(s) => format!("{:?}", s),
-            Interval(s) => format!("{:?}", s),
+            Blob(s) => format!("blob len: {}", s.size).as_str(),
+            Hugeint(s) => format!("{:?}", s).as_str(),
+            Interval(s) => format!("{:?}", s).as_str(),
             Unknown(_) => &"unknown",
         };
 
