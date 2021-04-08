@@ -299,7 +299,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("DB open");
 
-    let string = html! { <>{form.expect("Form")}</> };
+    let string = html! { <>{*form}</> };
     set_body_html(string);
 
     Ok(())
@@ -359,7 +359,7 @@ extern "C" fn callback(query_: *const c_char) {
                 };
                 html! {
                     <div>
-                        {form.expect("Form")}
+                        {*form}
                         {table}
                     </div>
                 }
@@ -368,7 +368,7 @@ extern "C" fn callback(query_: *const c_char) {
                 let e = error.to_string();
                 html! {
                     <div>
-                        {form.expect("Form")}
+                        {*form}
                         <pre><code>{e}</code></pre>
                     </div>
                 }
