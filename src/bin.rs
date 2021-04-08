@@ -303,10 +303,10 @@ impl<'a> ResolvedResult<'a> {
                         .expect("Hugeint"),
                 ),
                 DuckDBTypeBlob => {
-                    DbType::Blob(*duckdb_type_blob(result, col, row).as_ref().expect("Blob"))
+                    DbType::Blob(*duckdb_value_blob(result, col, row).as_ref().expect("Blob"))
                 }
                 DuckDBTypeInterval => DbType::Interval(
-                    *duckdb_type_interval(result, col, row)
+                    *duckdb_value_interval(result, col, row)
                         .as_ref()
                         .expect("Interval"),
                 ),
