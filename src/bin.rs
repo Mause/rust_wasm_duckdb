@@ -286,6 +286,19 @@ impl<'a> ResolvedResult<'a> {
                         .to_string_lossy()
                         .to_string(),
                 ),
+                DuckDBTypeHugeint => DbType::Hugeint(
+                    *duckdb_value_hugeint(result, col, row)
+                        .as_ref()
+                        .expect("Hugeint"),
+                ),
+                DuckDBTypeBlob => {
+                    DbType::Blob(*duckdb_type_blob(result, col, row).as_ref().expect("Blob"))
+                }
+                DuckDBTypeInterval => DbType::Interval(
+                    *duckdb_type_interval(result, col, row)
+                        .as_ref()
+                        .expect("Interval"),
+                ),
                 _ => DbType::Unknown(column.type_),
             }
         })
