@@ -59,7 +59,11 @@ pub enum DuckDBType {
 
 #[derive(Debug, IntoStaticStr)]
 enum DbType {
-    Integer(i64),
+    Boolean(bool),
+    Tinyint(i8),
+    Smallint(i16),
+    Integer(i32),
+    BigInt(i64),
     Float(f32),
     Date(duckdb_date),
     Time(duckdb_time),
