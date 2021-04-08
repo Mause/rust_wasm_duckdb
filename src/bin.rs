@@ -284,7 +284,7 @@ thread_local! {
 use lazy_static::lazy_static;
 
 lazy_static! {
-    static ref form: SimpleElement<'static, SimpleElement<'static, std::string::String>> = rsx! {
+    static ref form: SimpleElement<'static, SimpleElement<'static, ()>> = rsx! {
         <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
             <input autofocus={"true"} name={"query"}></input>
         </form>
