@@ -1,26 +1,26 @@
-use std::fmt::{Display, Error, Formatter};
 use libc::c_void;
+use std::fmt::{Display, Error, Formatter};
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct duckdb_interval {
-	months: i32,
-	days: i32,
-	micros: i64
+    months: i32,
+    days: i32,
+    micros: i64,
 }
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct duckdb_hugeint {
-	lower: u64,
-	upper: i64
+    lower: u64,
+    upper: i64,
 }
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct duckdb_blob {
-	data: *const c_void,
-	size: i64,
+    data: *const c_void,
+    size: i64,
 }
 
 #[repr(C)]

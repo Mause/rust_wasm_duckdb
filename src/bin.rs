@@ -9,7 +9,9 @@ use libc::c_void;
 pub type c_char = i8;
 use crate::db::DB;
 use crate::rendering::Table;
-use crate::types::{duckdb_date, duckdb_time, duckdb_timestamp, duckdb_interval, duckdb_blob, duckdb_hugeint};
+use crate::types::{
+    duckdb_blob, duckdb_date, duckdb_hugeint, duckdb_interval, duckdb_time, duckdb_timestamp,
+};
 use render::html;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
