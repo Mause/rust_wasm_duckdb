@@ -272,23 +272,22 @@ impl<'a> ResolvedResult<'a> {
     }
 }
 
+use render::{rsx, SimpleElement};
 use std::borrow::{Borrow, BorrowMut};
 use std::cell::RefCell;
 use std::sync::{Arc, Mutex};
 use std::thread_local;
-use render::{rsx, SimpleElement};
 
 thread_local! {
     static database: RefCell<Option<DB>> = RefCell::new(None);
 }
-use lazy_static::lazy_static;
 
-lazy_static! {
-    static ref form: SimpleElement<'static, SimpleElement<'static, ()>> = rsx! {
+fn form() -> SimpleElement<'static, SimpleElement<'static, ()>> {
+    rsx! {
         <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
             <input autofocus={"true"} name={"query"}></input>
         </form>
-    };
+    }
 }
 
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
@@ -299,7 +298,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("DB open");
 
-    let string = html! { <>{*form}</> };
+    let string = html! { <>{form()}</> };
     set_body_html(string);
 
     Ok(())
@@ -359,7 +358,7 @@ extern "C" fn callback(query_: *const c_char) {
                 };
                 html! {
                     <div>
-                        {*form}
+                        {form()}
                         {table}
                     </div>
                 }
@@ -368,7 +367,7 @@ extern "C" fn callback(query_: *const c_char) {
                 let e = error.to_string();
                 html! {
                     <div>
-                        {*form}
+                        {form()}
                         <pre><code>{e}</code></pre>
                     </div>
                 }
