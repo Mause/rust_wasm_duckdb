@@ -276,6 +276,7 @@ use std::borrow::{Borrow, BorrowMut};
 use std::cell::RefCell;
 use std::sync::{Arc, Mutex};
 use std::thread_local;
+use render::rsx;
 
 thread_local! {
     static database: RefCell<Option<DB>> = RefCell::new(None);
@@ -341,7 +342,6 @@ fn hook(info: &std::panic::PanicInfo) {
 
 #[no_mangle]
 extern "C" fn callback(query_: *const c_char) {
-    use render::rsx;
     let org = unsafe { CStr::from_ptr(query_) };
     let query = org.to_string_lossy();
 
