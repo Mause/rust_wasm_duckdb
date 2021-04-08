@@ -288,7 +288,7 @@ lazy_static! {
         <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
             <input autofocus={"true"} name={"query"}></input>
         </form>
-    }.expect("Form");
+    };
 }
 
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
@@ -299,7 +299,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("DB open");
 
-    let string = html! { <>{form}</> };
+    let string = html! { <>{form.expect("Form")}</> };
     set_body_html(string);
 
     Ok(())
@@ -359,7 +359,7 @@ extern "C" fn callback(query_: *const c_char) {
                 };
                 html! {
                     <div>
-                        {form}
+                        {form.expect("Form")}
                         {table}
                     </div>
                 }
@@ -368,7 +368,7 @@ extern "C" fn callback(query_: *const c_char) {
                 let e = error.to_string();
                 html! {
                     <div>
-                        {form}
+                        {form.expect("Form")}
                         <pre><code>{e}</code></pre>
                     </div>
                 }
