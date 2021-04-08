@@ -1,6 +1,6 @@
 use crate::jse;
 use crate::{
-    c_char, duckdb_date, duckdb_time, duckdb_timestamp, emscripten_asm_const_int, hook, main,
+    c_char, duckdb_date, duckdb_time, duckdb_timestamp, emscripten_asm_const_int, hook, main, callback
 };
 use speculate::speculate;
 use std::ffi::{CStr, CString};
@@ -46,6 +46,8 @@ speculate! {
 
     test "works" {
         main().unwrap();
+        let string = CString::new("select 1").unwrap();
+        callback(string.as_ptr());
 
         let html = get_document_html();
 
