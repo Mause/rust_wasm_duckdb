@@ -251,6 +251,7 @@ impl<'a> ResolvedResult<'a> {
 
         Ok(unsafe {
             match &column.type_ {
+                DuckDBTypeBoolean => DbType::Boolean(duckdb_value_boolean(result, col, row)),
                 DuckDBTypeTinyint => DbType::Tinyint(duckdb_value_int8(result, col, row)),
                 DuckDBTypeSmallint => DbType::Smallint(duckdb_value_int16(result, col, row)),
                 DuckDBTypeInteger => DbType::Integer(duckdb_value_int32(result, col, row)),
