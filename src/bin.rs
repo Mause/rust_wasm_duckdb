@@ -210,6 +210,11 @@ pub struct ResolvedResult<'a> {
     columns: Vec<DuckDBColumn>,
     length: usize,
 }
+impl<'a> Clone for ResolvedResult<'a> {
+    fn clone(&self) -> ResolvedResult<'a> {
+        unsafe { ResolvedResult::new(self.result) }
+    }
+}
 impl<'a> Drop for ResolvedResult<'a> {
     fn drop(&mut self) {
         unsafe { duckdb_destroy_result(self.result) };
@@ -267,34 +272,34 @@ impl<'a> ResolvedResult<'a> {
     }
 }
 
+use render::{rsx, SimpleElement};
+use std::borrow::{Borrow, BorrowMut};
+use std::cell::RefCell;
+use std::sync::{Arc, Mutex};
+use std::thread_local;
+
+thread_local! {
+    static database: RefCell<Option<DB>> = RefCell::new(None);
+}
+
+fn form() -> SimpleElement<'static, SimpleElement<'static, ()>> {
+    rsx! {
+        <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
+            <input placeholder={"select random()"} autofocus={"true"} name={"query"}></input>
+        </form>
+    }
+}
+
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     set_page_title("DuckDB Test".to_string());
 
-    let database = DB::new(Some("db.db"))?;
+    let db = Some(DB::new(Some("db.db"))?);
+    database.with(|f| f.replace(db));
 
     println!("DB open");
 
-    let resolved = database.query("select 42 as the_meaning_of_life, random() as randy, now() as nao, current_time as thime, current_date as daet")?;
-
-    println!("columns: {:?}", resolved.columns);
-
-    let table = Table {
-        resolved: &resolved,
-    };
-    let string = html! {
-        <div>
-            <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
-                <input name={"query"}></input>
-            </form>
-            {table}
-        </div>
-    };
-    println!("{}", string);
-
+    let string = html! { <>{form()}</> };
     set_body_html(string);
-
-    drop(resolved);
-    drop(database);
 
     Ok(())
 }
@@ -335,11 +340,44 @@ fn hook(info: &std::panic::PanicInfo) {
 }
 
 #[no_mangle]
-extern "C" fn callback(query: *const c_char) {
-    println!(
-        "you called?: {}",
-        unsafe { CStr::from_ptr(query) }.to_string_lossy()
-    );
+extern "C" fn callback(query_: *const c_char) {
+    let org = unsafe { CStr::from_ptr(query_) };
+    let query = org.to_string_lossy();
+
+    println!("you called?: {} {:?} {:?}", query, org, query_);
+
+    database.with(|borrowed| {
+        let yo = borrowed.borrow();
+
+        let string = match yo.as_ref().expect("no db?").query(&query) {
+            Ok(resolved) => {
+                println!("columns: {:?}", resolved.columns);
+
+                let table = Table {
+                    resolved: &resolved,
+                };
+                html! {
+                    <div>
+                        {form()}
+                        {table}
+                    </div>
+                }
+            }
+            Err(error) => {
+                let e = error.to_string();
+                html! {
+                    <div>
+                        {form()}
+                        <pre><code>{e}</code></pre>
+                    </div>
+                }
+            }
+        };
+
+        println!("{}", string);
+
+        set_body_html(string);
+    });
 }
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
