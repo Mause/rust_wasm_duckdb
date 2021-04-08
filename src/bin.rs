@@ -1,3 +1,4 @@
+#![feature(debug_non_exhaustive)]
 #![feature(extern_types)]
 #![feature(try_trait)]
 #![feature(static_nobundle)]
@@ -93,9 +94,9 @@ impl ToString for DbType {
             Time(s) => s,
             Timestamp(s) => s,
             Date(s) => s,
-            Blob(s) => format!("blob len: {}", s.size).as_str().as_ref(),
-            Hugeint(s) => format!("{:?}", s).as_str().as_ref(),
-            Interval(s) => format!("{:?}", s).as_str().as_ref(),
+            Blob(s) => s,
+            Hugeint(s) => s,
+            Interval(s) => s,
             Unknown(_) => &"unknown",
         };
 
