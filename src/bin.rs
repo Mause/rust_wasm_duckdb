@@ -9,7 +9,7 @@ use libc::c_void;
 pub type c_char = i8;
 use crate::db::DB;
 use crate::rendering::Table;
-use crate::types::{duckdb_date, duckdb_time, duckdb_timestamp};
+use crate::types::{duckdb_date, duckdb_time, duckdb_timestamp, duckdb_interval, duckdb_blob, duckdb_hugeint};
 use render::html;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
@@ -70,6 +70,9 @@ enum DbType {
     Timestamp(duckdb_timestamp),
     Double(f64),
     String(String),
+    Interval(duckdb_interval),
+    Hugeint(duckdb_hugeint),
+    Blob(duckdb_blob),
     Unknown(DuckDBType),
 }
 impl ToString for DbType {
