@@ -77,7 +77,11 @@ impl ToString for DbType {
         use crate::DbType::*;
 
         let value: &dyn ToString = match self {
+            Boolean(s) => s,
+            Tinyint(s) => s,
+            Smallint(s) => s,
             Integer(i) => i,
+            Bigint(s) => s,
             Float(f) => f,
             Double(f) => f,
             String(s) => s,
