@@ -124,13 +124,6 @@ struct DuckDBResult {
     error_message: *const c_char,
 }
 
-#[repr(C)]
-#[derive(Debug)]
-struct DuckDBBlob {
-    data: *const c_void,
-    size: i64,
-}
-
 extern "C" {
     fn duckdb_open(path: *const c_char, database: *const Database) -> DuckDBState;
 
@@ -174,7 +167,7 @@ extern "C" {
     fn duckdb_value_varchar(result: *const DuckDBResult, col: i64, row: i64) -> *const c_char;
     /// Fetches a blob from a result set column. Returns a blob with blob.data set to nullptr on failure or NULL. The
     /// resulting "blob.data" must be freed with free.
-    fn duckdb_value_blob(result: *const DuckDBResult, col: i64, row: i64) -> *const DuckDBBlob;
+    fn duckdb_value_blob(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_blob;
 
     fn duckdb_value_date(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_date;
     fn duckdb_value_time(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_time;
