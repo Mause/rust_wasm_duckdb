@@ -59,7 +59,11 @@ pub enum DuckDBType {
 
 #[derive(Debug, IntoStaticStr)]
 enum DbType {
-    Integer(i64),
+    Boolean(bool),
+    Tinyint(i8),
+    Smallint(i16),
+    Integer(i32),
+    Bigint(i64),
     Float(f32),
     Date(duckdb_date),
     Time(duckdb_time),
@@ -73,7 +77,11 @@ impl ToString for DbType {
         use crate::DbType::*;
 
         let value: &dyn ToString = match self {
+            Boolean(s) => s,
+            Tinyint(s) => s,
+            Smallint(s) => s,
             Integer(i) => i,
+            Bigint(s) => s,
             Float(f) => f,
             Double(f) => f,
             String(s) => s,
@@ -247,7 +255,11 @@ impl<'a> ResolvedResult<'a> {
 
         Ok(unsafe {
             match &column.type_ {
-                DuckDBTypeInteger => DbType::Integer(duckdb_value_int64(result, col, row)),
+                DuckDBTypeBoolean => DbType::Boolean(duckdb_value_boolean(result, col, row)),
+                DuckDBTypeTinyint => DbType::Tinyint(duckdb_value_int8(result, col, row)),
+                DuckDBTypeSmallint => DbType::Smallint(duckdb_value_int16(result, col, row)),
+                DuckDBTypeInteger => DbType::Integer(duckdb_value_int32(result, col, row)),
+                DuckDBTypeBigint => DbType::Bigint(duckdb_value_int64(result, col, row)),
                 DuckDBTypeTime => {
                     DbType::Time(*duckdb_value_time(result, col, row).as_ref().expect("Time"))
                 }
