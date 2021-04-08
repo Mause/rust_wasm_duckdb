@@ -71,7 +71,7 @@ jobs:
       with:
         name: target
         path: target/
-    - run: wasm-objdump --details --section=.data --full-contents target/wasm32-unknown-emscripten/debug/deps/bin-*.wasm
+    - run: wasm-objdump --details --section=data --full-contents target/wasm32-unknown-emscripten/debug/deps/bin-*.wasm
       if: always()
       continue-on-error: true
     - uses: actions-rs/clippy-check@v1
