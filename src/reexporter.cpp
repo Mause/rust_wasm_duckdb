@@ -396,6 +396,16 @@ extern "C"
         return &((duckdb_time *)result->columns[col].data)[row];
     }
 
+    duckdb_interval *duckdb_value_interval(duckdb_result *result, idx_t col, idx_t row)
+    {
+        return &((duckdb_interval *)result->columns[col].data)[row];
+    }
+
+    duckdb_hugeint *duckdb_value_hugeint(duckdb_result *result, idx_t col, idx_t row)
+    {
+        return &((duckdb_hugeint *)result->columns[col].data)[row];
+    }
+
     duckdb_timestamp *duckdb_value_timestamp(duckdb_result *result, idx_t col, idx_t row)
     {
         return &((duckdb_timestamp *)result->columns[col].data)[row];

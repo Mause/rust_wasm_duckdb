@@ -184,6 +184,17 @@ extern "C" {
         row: i64,
     ) -> *const duckdb_timestamp;
 
+    fn duckdb_value_hugeint(
+        result: *const DuckDBResult,
+        col: i64,
+        row: i64,
+    ) -> *const duckdb_hugeint;
+    fn duckdb_value_interval(
+        result: *const DuckDBResult,
+        col: i64,
+        row: i64,
+    ) -> *const duckdb_interval;
+
     fn query(db: *const Database, query: *const c_char, result: *const DuckDBResult)
         -> DuckDBState;
 
