@@ -285,7 +285,7 @@ thread_local! {
 fn form() -> SimpleElement<'static, SimpleElement<'static, ()>> {
     rsx! {
         <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
-            <input autofocus={"true"} name={"query"}></input>
+            <input placeholder={"select random()"} autofocus={"true"} name={"query"}></input>
         </form>
     }
 }
