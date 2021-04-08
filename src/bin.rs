@@ -283,7 +283,7 @@ thread_local! {
 use lazy_static::lazy_static;
 
 lazy_static! {
-    static ref form: render::SimpleElement = rsx! {
+    static ref form: render::SimpleElement<'static, &str> = rsx! {
         <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
             <input autofocus={"true"} name={"query"}></input>
         </form>
