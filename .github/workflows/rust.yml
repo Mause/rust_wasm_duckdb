@@ -71,7 +71,7 @@ jobs:
       if: failure()
       with:
         name: emscripten_logs
-        path: ${{ env.TEMP }}/emscripten_temp
+        path: ${{ env.TMP }}/emscripten_temp
     - run: wasm-objdump --details --headers --reloc --debug --section=data --full-contents target/wasm32-unknown-emscripten/debug/deps/bin-*.wasm
       if: always()
       continue-on-error: true
