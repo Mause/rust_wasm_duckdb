@@ -1,3 +1,4 @@
+#![feature(debug_non_exhaustive)]
 #![feature(extern_types)]
 #![feature(try_trait)]
 #![feature(static_nobundle)]
@@ -9,7 +10,9 @@ use libc::c_void;
 pub type c_char = i8;
 use crate::db::DB;
 use crate::rendering::Table;
-use crate::types::{duckdb_date, duckdb_time, duckdb_timestamp};
+use crate::types::{
+    duckdb_blob, duckdb_date, duckdb_hugeint, duckdb_interval, duckdb_time, duckdb_timestamp,
+};
 use render::html;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
@@ -59,13 +62,20 @@ pub enum DuckDBType {
 
 #[derive(Debug, IntoStaticStr)]
 enum DbType {
-    Integer(i64),
+    Boolean(bool),
+    Tinyint(i8),
+    Smallint(i16),
+    Integer(i32),
+    Bigint(i64),
     Float(f32),
     Date(duckdb_date),
     Time(duckdb_time),
     Timestamp(duckdb_timestamp),
     Double(f64),
     String(String),
+    Interval(duckdb_interval),
+    Hugeint(duckdb_hugeint),
+    Blob(duckdb_blob),
     Unknown(DuckDBType),
 }
 impl ToString for DbType {
@@ -73,13 +83,20 @@ impl ToString for DbType {
         use crate::DbType::*;
 
         let value: &dyn ToString = match self {
+            Boolean(s) => s,
+            Tinyint(s) => s,
+            Smallint(s) => s,
             Integer(i) => i,
+            Bigint(s) => s,
             Float(f) => f,
             Double(f) => f,
             String(s) => s,
             Time(s) => s,
             Timestamp(s) => s,
             Date(s) => s,
+            Blob(s) => s,
+            Hugeint(s) => s,
+            Interval(s) => s,
             Unknown(_) => &"unknown",
         };
 
@@ -106,13 +123,6 @@ struct DuckDBResult {
     row_count: i64,
     columns: *mut DuckDBColumn,
     error_message: *const c_char,
-}
-
-#[repr(C)]
-#[derive(Debug)]
-struct DuckDBBlob {
-    data: *const c_void,
-    size: i64,
 }
 
 extern "C" {
@@ -158,7 +168,7 @@ extern "C" {
     fn duckdb_value_varchar(result: *const DuckDBResult, col: i64, row: i64) -> *const c_char;
     /// Fetches a blob from a result set column. Returns a blob with blob.data set to nullptr on failure or NULL. The
     /// resulting "blob.data" must be freed with free.
-    fn duckdb_value_blob(result: *const DuckDBResult, col: i64, row: i64) -> *const DuckDBBlob;
+    fn duckdb_value_blob(result: *const DuckDBResult, blob: *const duckdb_blob, col: i64, row: i64);
 
     fn duckdb_value_date(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_date;
     fn duckdb_value_time(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_time;
@@ -167,6 +177,17 @@ extern "C" {
         col: i64,
         row: i64,
     ) -> *const duckdb_timestamp;
+
+    fn duckdb_value_hugeint(
+        result: *const DuckDBResult,
+        col: i64,
+        row: i64,
+    ) -> *const duckdb_hugeint;
+    fn duckdb_value_interval(
+        result: *const DuckDBResult,
+        col: i64,
+        row: i64,
+    ) -> *const duckdb_interval;
 
     fn query(db: *const Database, query: *const c_char, result: *const DuckDBResult)
         -> DuckDBState;
@@ -210,8 +231,14 @@ pub struct ResolvedResult<'a> {
     columns: Vec<DuckDBColumn>,
     length: usize,
 }
+impl<'a> Clone for ResolvedResult<'a> {
+    fn clone(&self) -> ResolvedResult<'a> {
+        unsafe { ResolvedResult::new(self.result) }
+    }
+}
 impl<'a> Drop for ResolvedResult<'a> {
     fn drop(&mut self) {
+        println!("Dropping {:?}", self);
         unsafe { duckdb_destroy_result(self.result) };
     }
 }
@@ -242,7 +269,11 @@ impl<'a> ResolvedResult<'a> {
 
         Ok(unsafe {
             match &column.type_ {
-                DuckDBTypeInteger => DbType::Integer(duckdb_value_int64(result, col, row)),
+                DuckDBTypeBoolean => DbType::Boolean(duckdb_value_boolean(result, col, row)),
+                DuckDBTypeTinyint => DbType::Tinyint(duckdb_value_int8(result, col, row)),
+                DuckDBTypeSmallint => DbType::Smallint(duckdb_value_int16(result, col, row)),
+                DuckDBTypeInteger => DbType::Integer(duckdb_value_int32(result, col, row)),
+                DuckDBTypeBigint => DbType::Bigint(duckdb_value_int64(result, col, row)),
                 DuckDBTypeTime => {
                     DbType::Time(*duckdb_value_time(result, col, row).as_ref().expect("Time"))
                 }
@@ -261,40 +292,56 @@ impl<'a> ResolvedResult<'a> {
                         .to_string_lossy()
                         .to_string(),
                 ),
+                DuckDBTypeHugeint => DbType::Hugeint(
+                    *duckdb_value_hugeint(result, col, row)
+                        .as_ref()
+                        .expect("Hugeint"),
+                ),
+                DuckDBTypeBlob => {
+                    let ptr: *const duckdb_blob = malloc(PTR);
+                    duckdb_value_blob(result, ptr, col, row);
+                    DbType::Blob(ptr.as_ref().expect("Blob").clone())
+                }
+                DuckDBTypeInterval => DbType::Interval(
+                    *duckdb_value_interval(result, col, row)
+                        .as_ref()
+                        .expect("Interval"),
+                ),
                 _ => DbType::Unknown(column.type_),
             }
         })
     }
 }
 
+use render::{rsx, SimpleElement};
+use std::borrow::{Borrow, BorrowMut};
+use std::cell::RefCell;
+use std::sync::{Arc, Mutex};
+use std::thread_local;
+
+thread_local! {
+    static database: RefCell<Option<DB>> = RefCell::new(None);
+}
+
+fn form() -> SimpleElement<'static, SimpleElement<'static, ()>> {
+    rsx! {
+        <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
+            <input placeholder={"select random()"} autofocus={"true"} name={"query"}></input>
+        </form>
+    }
+}
+
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     set_page_title("DuckDB Test".to_string());
 
-    let database = DB::new(Some("db.db"))?;
+    let db = Some(DB::new(Some("db.db"))?);
+    println!("DB: {:?}", db);
+    database.with(|f| f.replace(db));
 
     println!("DB open");
 
-    let resolved = database.query("select 42 as the_meaning_of_life, random() as randy, now() as nao, current_time as thime, current_date as daet")?;
-
-    println!("columns: {:?}", resolved.columns);
-
-    let table = Table {
-        resolved: &resolved,
-    };
-    let string = html! {
-        <div>
-            <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
-                <input name={"query"}></input>
-            </form>
-            {table}
-        </div>
-    };
-    println!("{}", string);
-
+    let string = html! { <>{form()}</> };
     set_body_html(string);
-
-    drop(resolved);
-    drop(database);
 
     Ok(())
 }
@@ -335,11 +382,46 @@ fn hook(info: &std::panic::PanicInfo) {
 }
 
 #[no_mangle]
-extern "C" fn callback(query: *const c_char) {
-    println!(
-        "you called?: {}",
-        unsafe { CStr::from_ptr(query) }.to_string_lossy()
-    );
+extern "C" fn callback(query_: *const c_char) {
+    let org = unsafe { CStr::from_ptr(query_) };
+    let query = org.to_string_lossy();
+
+    println!("you called?: {} {:?} {:?}", query, org, query_);
+
+    database.with(|borrowed| {
+        println!("borrowed: {:?}", borrowed);
+        let yo = borrowed.borrow();
+        println!("yo: {:?}", yo);
+
+        let string = match yo.as_ref().expect("no db?").query(&query) {
+            Ok(resolved) => {
+                println!("columns: {:?}", resolved.columns);
+
+                let table = Table {
+                    resolved: &resolved,
+                };
+                html! {
+                    <div>
+                        {form()}
+                        {table}
+                    </div>
+                }
+            }
+            Err(error) => {
+                let e = error.to_string();
+                html! {
+                    <div>
+                        {form()}
+                        <pre><code>{e}</code></pre>
+                    </div>
+                }
+            }
+        };
+
+        println!("{}", string);
+
+        set_body_html(string);
+    });
 }
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {

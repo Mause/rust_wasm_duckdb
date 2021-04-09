@@ -3,6 +3,7 @@ use crate::{
 };
 use std::ffi::{CStr, CString};
 
+#[derive(Debug)]
 pub struct DB {
     db: *const Database,
 }
@@ -22,8 +23,7 @@ impl DB {
 
         Ok(Self { db })
     }
-}
-impl DB {
+
     pub fn query(&self, que: &str) -> Result<ResolvedResult, Box<dyn std::error::Error>> {
         unsafe {
             let s = CString::new(que).expect("string");
@@ -43,6 +43,7 @@ impl DB {
 }
 impl Drop for DB {
     fn drop(&mut self) {
+        println!("Dropping {:?}", self);
         unsafe { ext_duckdb_close(self.db) };
     }
 }
