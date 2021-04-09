@@ -50,7 +50,8 @@ speculate! {
         let string = CString::new(query).unwrap();
         callback(string.as_ptr());
     }
-
+    
+    /*
     test "version check" {
         basic_test("pragma version");
     }
@@ -58,6 +59,7 @@ speculate! {
     test "blob" {
         basic_test("select 'a'::blob");
     }
+    */
 
     test "works" {
         basic_test("select 1");
