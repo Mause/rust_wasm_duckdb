@@ -387,7 +387,9 @@ extern "C" fn callback(query_: *const c_char) {
     println!("you called?: {} {:?} {:?}", query, org, query_);
 
     database.with(|borrowed| {
+        println!("borrowed: {:?}", borrowed);
         let yo = borrowed.borrow();
+        println!("yo: {:?}", yo);
 
         let string = match yo.as_ref().expect("no db?").query(&query) {
             Ok(resolved) => {
