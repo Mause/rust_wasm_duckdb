@@ -299,7 +299,7 @@ impl<'a> ResolvedResult<'a> {
                 DuckDBTypeBlob => {
                     let ptr: *const duckdb_blob = malloc(PTR);
                     duckdb_value_blob(result, ptr, col, row);
-                    DbType::Blob(*ptr.as_ref().expect("Blob"))
+                    DbType::Blob(ptr.as_ref().expect("Blob").clone())
                 }
                 DuckDBTypeInterval => DbType::Interval(
                     *duckdb_value_interval(result, col, row)
