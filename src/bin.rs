@@ -224,40 +224,54 @@ impl<'a> ResolvedResult<'a> {
 
         Ok(unsafe {
             match &column.type_ {
-                DuckDBTypeBoolean => DbType::Boolean(duckdb_value_boolean(result, col, row)),
-                DuckDBTypeTinyint => DbType::Tinyint(duckdb_value_int8(result, col, row)),
-                DuckDBTypeSmallint => DbType::Smallint(duckdb_value_int16(result, col, row)),
-                DuckDBTypeInteger => DbType::Integer(duckdb_value_int32(result, col, row)),
-                DuckDBTypeBigint => DbType::Bigint(duckdb_value_int64(result, col, row)),
-                DuckDBTypeTime => {
+                DuckDBType::DUCKDB_TYPE_BOOLEAN => {
+                    DbType::Boolean(duckdb_value_boolean(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_TINYINT => {
+                    DbType::Tinyint(duckdb_value_int8(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_SMALLINT => {
+                    DbType::Smallint(duckdb_value_int16(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_INTEGER => {
+                    DbType::Integer(duckdb_value_int32(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_BIGINT => {
+                    DbType::Bigint(duckdb_value_int64(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_TIME => {
                     DbType::Time(*duckdb_value_time(result, col, row).as_ref().expect("Time"))
                 }
-                DuckDBTypeTimestamp => DbType::Timestamp(
+                DuckDBType::DUCKDB_TYPE_TIMESTAMP => DbType::Timestamp(
                     *duckdb_value_timestamp(result, col, row)
                         .as_ref()
                         .expect("Timestamp"),
                 ),
-                DuckDBTypeDate => {
+                DuckDBType::DUCKDB_TYPE_DATE => {
                     DbType::Date(*duckdb_value_date(result, col, row).as_ref().expect("Date"))
                 }
-                DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
-                DuckDBTypeDouble => DbType::Double(duckdb_value_double(result, col, row)),
-                DuckDBTypeVarchar => DbType::String(
+                DuckDBType::DUCKDB_TYPE_FLOAT => {
+                    DbType::Float(duckdb_value_float(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_DOUBLE => {
+                    DbType::Double(duckdb_value_double(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_VARCHAR => DbType::String(
                     CStr::from_ptr(duckdb_value_varchar(result, col, row))
                         .to_string_lossy()
                         .to_string(),
                 ),
-                DuckDBTypeHugeint => DbType::Hugeint(
+                DuckDBType::DUCKDB_TYPE_HUGEINT => DbType::Hugeint(
                     *duckdb_value_hugeint(result, col, row)
                         .as_ref()
                         .expect("Hugeint"),
                 ),
-                DuckDBTypeBlob => {
+                DuckDBType::DUCKDB_TYPE_BLOB => {
                     let ptr: *const duckdb_blob = malloc(PTR);
                     duckdb_value_blob(result, ptr, col, row);
                     DbType::Blob(ptr.as_ref().expect("Blob").clone())
                 }
-                DuckDBTypeInterval => DbType::Interval(
+                DuckDBType::DUCKDB_TYPE_INTERVAL => DbType::Interval(
                     *duckdb_value_interval(result, col, row)
                         .as_ref()
                         .expect("Interval"),
