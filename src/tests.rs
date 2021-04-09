@@ -45,10 +45,24 @@ speculate! {
         );
     }
 
-    test "works" {
+    fn basic_test(query: &str) {
         main().unwrap();
-        let string = CString::new("select 1").unwrap();
+        let string = CString::new(query).unwrap();
         callback(string.as_ptr());
+    }
+    
+    /*
+    test "version check" {
+        basic_test("pragma version");
+    }
+
+    test "blob" {
+        basic_test("select 'a'::blob");
+    }
+    */
+
+    test "works" {
+        basic_test("select 1");
 
         let html = get_document_html();
 

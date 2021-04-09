@@ -1,3 +1,4 @@
+#![feature(debug_non_exhaustive)]
 #![feature(extern_types)]
 #![feature(try_trait)]
 #![feature(static_nobundle)]
@@ -9,7 +10,9 @@ use libc::c_void;
 pub type c_char = i8;
 use crate::db::DB;
 use crate::rendering::Table;
-use crate::types::{duckdb_date, duckdb_time, duckdb_timestamp};
+use crate::types::{
+    duckdb_blob, duckdb_date, duckdb_hugeint, duckdb_interval, duckdb_time, duckdb_timestamp,
+};
 use render::html;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
@@ -70,6 +73,9 @@ enum DbType {
     Timestamp(duckdb_timestamp),
     Double(f64),
     String(String),
+    Interval(duckdb_interval),
+    Hugeint(duckdb_hugeint),
+    Blob(duckdb_blob),
     Unknown(DuckDBType),
 }
 impl ToString for DbType {
@@ -88,6 +94,9 @@ impl ToString for DbType {
             Time(s) => s,
             Timestamp(s) => s,
             Date(s) => s,
+            Blob(s) => s,
+            Hugeint(s) => s,
+            Interval(s) => s,
             Unknown(_) => &"unknown",
         };
 
@@ -114,13 +123,6 @@ struct DuckDBResult {
     row_count: i64,
     columns: *mut DuckDBColumn,
     error_message: *const c_char,
-}
-
-#[repr(C)]
-#[derive(Debug)]
-struct DuckDBBlob {
-    data: *const c_void,
-    size: i64,
 }
 
 extern "C" {
@@ -166,7 +168,7 @@ extern "C" {
     fn duckdb_value_varchar(result: *const DuckDBResult, col: i64, row: i64) -> *const c_char;
     /// Fetches a blob from a result set column. Returns a blob with blob.data set to nullptr on failure or NULL. The
     /// resulting "blob.data" must be freed with free.
-    fn duckdb_value_blob(result: *const DuckDBResult, col: i64, row: i64) -> *const DuckDBBlob;
+    fn duckdb_value_blob(result: *const DuckDBResult, blob: *const duckdb_blob, col: i64, row: i64);
 
     fn duckdb_value_date(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_date;
     fn duckdb_value_time(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_time;
@@ -175,6 +177,17 @@ extern "C" {
         col: i64,
         row: i64,
     ) -> *const duckdb_timestamp;
+
+    fn duckdb_value_hugeint(
+        result: *const DuckDBResult,
+        col: i64,
+        row: i64,
+    ) -> *const duckdb_hugeint;
+    fn duckdb_value_interval(
+        result: *const DuckDBResult,
+        col: i64,
+        row: i64,
+    ) -> *const duckdb_interval;
 
     fn query(db: *const Database, query: *const c_char, result: *const DuckDBResult)
         -> DuckDBState;
@@ -225,6 +238,7 @@ impl<'a> Clone for ResolvedResult<'a> {
 }
 impl<'a> Drop for ResolvedResult<'a> {
     fn drop(&mut self) {
+        println!("Dropping {:?}", self);
         unsafe { duckdb_destroy_result(self.result) };
     }
 }
@@ -278,6 +292,21 @@ impl<'a> ResolvedResult<'a> {
                         .to_string_lossy()
                         .to_string(),
                 ),
+                DuckDBTypeHugeint => DbType::Hugeint(
+                    *duckdb_value_hugeint(result, col, row)
+                        .as_ref()
+                        .expect("Hugeint"),
+                ),
+                DuckDBTypeBlob => {
+                    let ptr: *const duckdb_blob = malloc(PTR);
+                    duckdb_value_blob(result, ptr, col, row);
+                    DbType::Blob(ptr.as_ref().expect("Blob").clone())
+                }
+                DuckDBTypeInterval => DbType::Interval(
+                    *duckdb_value_interval(result, col, row)
+                        .as_ref()
+                        .expect("Interval"),
+                ),
                 _ => DbType::Unknown(column.type_),
             }
         })
@@ -306,6 +335,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     set_page_title("DuckDB Test".to_string());
 
     let db = Some(DB::new(Some("db.db"))?);
+    println!("DB: {:?}", db);
     database.with(|f| f.replace(db));
 
     println!("DB open");
@@ -359,7 +389,9 @@ extern "C" fn callback(query_: *const c_char) {
     println!("you called?: {} {:?} {:?}", query, org, query_);
 
     database.with(|borrowed| {
+        println!("borrowed: {:?}", borrowed);
         let yo = borrowed.borrow();
+        println!("yo: {:?}", yo);
 
         let string = match yo.as_ref().expect("no db?").query(&query) {
             Ok(resolved) => {

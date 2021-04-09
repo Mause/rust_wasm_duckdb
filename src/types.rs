@@ -1,4 +1,72 @@
+use libc::c_void;
 use std::fmt::{Display, Error, Formatter};
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct duckdb_interval {
+    months: i32,
+    days: i32,
+    micros: i64,
+}
+impl Display for duckdb_interval {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        f.debug_struct("duckdb_interval")
+            .field("months", &self.months)
+            .field("days", &self.days)
+            .field("micros", &self.micros)
+            .finish()
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct duckdb_hugeint {
+    lower: u64,
+    upper: i64,
+}
+impl Display for duckdb_hugeint {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        use std::convert::TryInto;
+
+        let sign = if self.upper >= 0 { 1 } else { -1 };
+        let upper = if sign == -1 { -self.upper } else { self.upper };
+
+        let mut twisted: i128 = upper.into();
+        let mut twisted: u128 = twisted.try_into().unwrap();
+        twisted <<= 64;
+        let step: u128 = self.lower.into();
+        twisted &= step;
+
+        f.debug_struct("duckdb_hugeint")
+            .field("value", &twisted)
+            .finish()
+    }
+}
+
+extern "C" {
+    fn free(ptr: *const c_void);
+}
+
+#[repr(C)]
+#[derive(Debug, Clone)]
+pub struct duckdb_blob {
+    data: *const c_void,
+    pub size: i64,
+}
+impl Drop for duckdb_blob {
+    fn drop(&mut self) {
+        unsafe {
+            free(self.data);
+        };
+    }
+}
+impl Display for duckdb_blob {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        f.debug_struct("duckdb_blob")
+            .field("size", &self.size)
+            .finish_non_exhaustive()
+    }
+}
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]

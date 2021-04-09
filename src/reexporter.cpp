@@ -144,7 +144,24 @@ static duckdb_state duckdb_translate_result(MaterializedQueryResult *result, duc
             }
             break;
         }
-        case LogicalTypeId::DATE:
+	case LogicalTypeId::BLOB: {
+		idx_t row = 0;
+		auto target = (duckdb_blob *)out->columns[col].data;
+		for (auto &chunk : result->collection.Chunks()) {
+			auto source = FlatVector::GetData<string_t>(chunk->data[col]);
+			for (idx_t k = 0; k < chunk->size(); k++) {
+				if (!FlatVector::IsNull(chunk->data[col], k)) {
+					target[row].data = (char *)malloc(source[k].GetSize());
+					target[row].size = source[k].GetSize();
+					assert(target[row].data);
+					memcpy((void *)target[row].data, source[k].GetDataUnsafe(), source[k].GetSize());
+				}
+				row++;
+			}
+		}
+		break;
+	}
+	case LogicalTypeId::DATE:
         {
             idx_t row = 0;
             auto target = (duckdb_date *)out->columns[col].data;
@@ -394,6 +411,16 @@ extern "C"
     duckdb_time *duckdb_value_time(duckdb_result *result, idx_t col, idx_t row)
     {
         return &((duckdb_time *)result->columns[col].data)[row];
+    }
+
+    duckdb_interval *duckdb_value_interval(duckdb_result *result, idx_t col, idx_t row)
+    {
+        return &((duckdb_interval *)result->columns[col].data)[row];
+    }
+
+    duckdb_hugeint *duckdb_value_hugeint(duckdb_result *result, idx_t col, idx_t row)
+    {
+        return &((duckdb_hugeint *)result->columns[col].data)[row];
     }
 
     duckdb_timestamp *duckdb_value_timestamp(duckdb_result *result, idx_t col, idx_t row)

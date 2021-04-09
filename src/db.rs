@@ -43,6 +43,7 @@ impl DB {
 }
 impl Drop for DB {
     fn drop(&mut self) {
+        println!("Dropping {:?}", self);
         unsafe { ext_duckdb_close(self.db) };
     }
 }
