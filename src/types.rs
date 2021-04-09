@@ -2,6 +2,7 @@ pub use crate::bindings::{
     duckdb_date, duckdb_hugeint, duckdb_interval, duckdb_time, duckdb_timestamp,
 };
 use libc::c_void;
+use std::convert::TryInto;
 use std::fmt::{Display, Error, Formatter};
 
 impl Display for duckdb_interval {
@@ -14,10 +15,8 @@ impl Display for duckdb_interval {
     }
 }
 
-impl Display for duckdb_hugeint {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        use std::convert::TryInto;
-
+impl Into<i128> for duckdb_hugeint {
+    fn into(&self) -> i128 {
         let sign = if self.upper >= 0 { 1 } else { -1 };
         let upper = if sign == -1 { -self.upper } else { self.upper };
 
@@ -27,8 +26,18 @@ impl Display for duckdb_hugeint {
         let step: u128 = self.lower.into();
         twisted &= step;
 
+        if sign == 1 {
+            twisted
+        } else {
+            -twisted
+        }
+    }
+}
+
+impl Display for duckdb_hugeint {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         f.debug_struct("duckdb_hugeint")
-            .field("value", &twisted)
+            .field("value", &self.into())
             .finish()
     }
 }
