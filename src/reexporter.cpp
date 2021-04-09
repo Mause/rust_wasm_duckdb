@@ -271,6 +271,11 @@ static duckdb_state duckdb_translate_result(MaterializedQueryResult *result, duc
     return DuckDBSuccess;
 }
 
+enum DUCKDB_TYPE_EXTENDED {
+    DUCKDB_TYPE_STRUCT = 15,
+    DUCKDB_TYPE_LIST = 16
+}
+
 duckdb_type ConvertCPPTypeToC(LogicalType sql_type)
 {
     switch (sql_type.id())
@@ -303,6 +308,10 @@ duckdb_type ConvertCPPTypeToC(LogicalType sql_type)
         return DUCKDB_TYPE_BLOB;
     case LogicalTypeId::INTERVAL:
         return DUCKDB_TYPE_INTERVAL;
+    case LogicalTypeId::STRUCT:
+        return DUCKDB_TYPE_STRUCT;
+    case LogicalTypeId::LIST:
+        return DUCKDB_TYPE_LIST;
     default:
         return DUCKDB_TYPE_INVALID;
     }
