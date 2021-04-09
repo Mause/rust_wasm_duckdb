@@ -334,6 +334,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     set_page_title("DuckDB Test".to_string());
 
     let db = Some(DB::new(Some("db.db"))?);
+    println!("DB: {:?}", db);
     database.with(|f| f.replace(db));
 
     println!("DB open");
