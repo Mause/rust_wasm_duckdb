@@ -42,7 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         from_file(
             &release,
             "libduckdb-src.zip",
-            vec!["duckdb.hpp", "duckdb.cpp"]
+            vec!["duckdb.h", "duckdb.hpp", "duckdb.cpp"]
         ),
         from_file(&release, "duckdb-wasm32-nothreads.zip", vec!["duckdb.wasm"])
     )?;
