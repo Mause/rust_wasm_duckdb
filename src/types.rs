@@ -48,7 +48,7 @@ extern "C" {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct duckdb_blob {
     data: *const c_void,
     pub size: i64,
