@@ -1,5 +1,6 @@
 pub use crate::bindings::{
-    duckdb_date, duckdb_hugeint, duckdb_interval, duckdb_time, duckdb_timestamp,
+    duckdb_column as DuckDBColumn, duckdb_date, duckdb_hugeint, duckdb_interval,
+    duckdb_result as DuckDBResult, duckdb_time, duckdb_timestamp, duckdb_type,
 };
 use libc::c_void;
 use std::convert::TryInto;
