@@ -238,6 +238,7 @@ impl<'a> Clone for ResolvedResult<'a> {
 }
 impl<'a> Drop for ResolvedResult<'a> {
     fn drop(&mut self) {
+        println!("Dropping {:?}", self);
         unsafe { duckdb_destroy_result(self.result) };
     }
 }
