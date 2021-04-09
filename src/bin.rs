@@ -3,6 +3,8 @@
 #![feature(try_trait)]
 #![feature(static_nobundle)]
 #![feature(proc_macro_hygiene)]
+#![allow(unused_parens)]
+#![allow(unused_braces)]
 
 use crate::state::DuckDBState;
 use libc::c_void;
@@ -14,8 +16,11 @@ use crate::types::{
     duckdb_blob, duckdb_date, duckdb_hugeint, duckdb_interval, duckdb_time, duckdb_timestamp,
 };
 use render::html;
+use render::{rsx, SimpleElement};
+use std::cell::RefCell;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
+use std::thread_local;
 use strum_macros::IntoStaticStr;
 
 mod bindings;
@@ -313,12 +318,6 @@ impl<'a> ResolvedResult<'a> {
         })
     }
 }
-
-use render::{rsx, SimpleElement};
-use std::borrow::{Borrow, BorrowMut};
-use std::cell::RefCell;
-use std::sync::{Arc, Mutex};
-use std::thread_local;
 
 thread_local! {
     static database: RefCell<Option<DB>> = RefCell::new(None);
