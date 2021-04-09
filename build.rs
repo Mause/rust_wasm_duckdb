@@ -55,30 +55,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .expect("aaaaa")
     );
 
-    let p = std::path::Path::new(&emar_path)
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .join("bin");
+    let p = emar_path.parent().unwrap().parent().unwrap().join("bin");
 
     println!("{:?}", p);
 
     std::env::set_var("LIBCLANG_PATH", &p);
 
-    let builder = bindgen::builder()
+    bindgen::builder()
         .header("target/duckdb.h")
         // .detect_include_paths(true)
-        .clang_arg(
-            "-IC:\\Users\\me\\AppData\\Local\\emsdk\\upstream\\emscripten\\cache\\sysroot\\include",
-        )
+        .clang_arg(format!(
+            "-I{}",
+            emar_path
+                .join("../cache/sysroot/include")
+                .to_str()
+                .expect("include path")
+        ))
         .generate_block(true)
         .rustified_enum(".*")
         // .clang_arg("-DDUCKDB_BUILD_LIBRARY")
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks));
-    let bindings = builder.generate().expect("failed?");
-
-    bindings.write_to_file(std::env::var("OUT_DIR")? + "/bindings.rs")?;
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .generate()
+        .expect("failed?")
+        .write_to_file(std::env::var("OUT_DIR")? + "/bindings.rs")?;
 
     Ok(())
 }
