@@ -55,7 +55,9 @@ pub struct duckdb_blob {
 }
 impl Drop for duckdb_blob {
     fn drop(&mut self) {
-        free(self.data);
+        unsafe {
+            free(self.data);
+        };
     }
 }
 impl Display for duckdb_blob {

@@ -44,7 +44,7 @@ speculate! {
             duckdb_time::new(11, 13, 0, 0)
         );
     }
-    
+
     fn basic_test(query: &str) {
         main().unwrap();
         let string = CString::new(query).unwrap();
@@ -53,12 +53,12 @@ speculate! {
 
     test "version check" {
         basic_test("pragma version");
-    }    
+    }
 
     test "blob" {
         basic_test("select 'a'::blob");
-    }    
-    
+    }
+
     test "works" {
         basic_test("select 1");
 
