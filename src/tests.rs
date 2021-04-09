@@ -51,6 +51,10 @@ speculate! {
         callback(string.as_ptr());
     }
 
+    test "version check" {
+        basic_test("pragma version");
+    }    
+
     test "blob" {
         basic_test("select 'a'::blob");
     }    
