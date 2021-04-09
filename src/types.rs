@@ -43,11 +43,20 @@ impl Display for duckdb_hugeint {
     }
 }
 
+extern "C" {
+    fn free(ptr: *const _);
+}
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct duckdb_blob {
     data: *const c_void,
     pub size: i64,
+}
+impl Drop for duckdb_blob {
+    fn drop(self) {
+        free(self.data);
+    }
 }
 impl Display for duckdb_blob {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
