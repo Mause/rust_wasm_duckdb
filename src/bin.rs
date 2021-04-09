@@ -18,6 +18,7 @@ use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
 use strum_macros::IntoStaticStr;
 
+mod bindings;
 mod db;
 mod jse;
 mod rendering;

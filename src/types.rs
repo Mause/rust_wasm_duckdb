@@ -1,13 +1,9 @@
+pub use crate::bindings::{
+    duckdb_date, duckdb_hugeint, duckdb_interval, duckdb_time, duckdb_timestamp,
+};
 use libc::c_void;
 use std::fmt::{Display, Error, Formatter};
 
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct duckdb_interval {
-    months: i32,
-    days: i32,
-    micros: i64,
-}
 impl Display for duckdb_interval {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         f.debug_struct("duckdb_interval")
@@ -18,12 +14,6 @@ impl Display for duckdb_interval {
     }
 }
 
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct duckdb_hugeint {
-    lower: u64,
-    upper: i64,
-}
 impl Display for duckdb_hugeint {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         use std::convert::TryInto;
@@ -68,13 +58,6 @@ impl Display for duckdb_blob {
     }
 }
 
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct duckdb_date {
-    year: i32,
-    month: i8,
-    day: i8,
-}
 impl duckdb_date {
     pub fn new(year: i32, month: i8, day: i8) -> Self {
         Self { year, month, day }
@@ -89,14 +72,6 @@ impl Display for duckdb_date {
     }
 }
 
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct duckdb_time {
-    hour: i8,
-    min: i8,
-    sec: i8,
-    micros: i16,
-}
 impl duckdb_time {
     pub fn new(hour: i8, min: i8, sec: i8, micros: i16) -> Self {
         Self {
@@ -116,12 +91,6 @@ impl Display for duckdb_time {
     }
 }
 
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct duckdb_timestamp {
-    date: duckdb_date,
-    time: duckdb_time,
-}
 impl duckdb_timestamp {
     pub fn new(date: duckdb_date, time: duckdb_time) -> Self {
         Self { date, time }
