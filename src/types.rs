@@ -44,7 +44,7 @@ impl Display for duckdb_hugeint {
 }
 
 extern "C" {
-    fn free(ptr: *const _);
+    fn free(ptr: *const c_void);
 }
 
 #[repr(C)]
