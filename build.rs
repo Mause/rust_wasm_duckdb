@@ -55,11 +55,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .expect("aaaaa")
     );
 
-    let p = emar_path.parent().unwrap().parent().unwrap().join("bin");
+    #[cfg(windows)]
+    {
+        let p = emar_path.parent().unwrap().parent().unwrap().join("bin");
 
-    println!("{:?}", p);
-
-    std::env::set_var("LIBCLANG_PATH", &p);
+        println!("{:?}", p);
+        std::env::set_var("LIBCLANG_PATH", &p);
+    }
 
     bindgen::builder()
         .header("target/duckdb.h")
