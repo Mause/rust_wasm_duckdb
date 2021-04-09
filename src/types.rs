@@ -54,7 +54,7 @@ pub struct duckdb_blob {
     pub size: i64,
 }
 impl Drop for duckdb_blob {
-    fn drop(self) {
+    fn drop(&mut self) {
         free(self.data);
     }
 }
