@@ -45,7 +45,8 @@ pub fn Table<'a>(resolved: &'a ResolvedResult<'a>) -> render::SimpleElement {
             let name = unsafe { CStr::from_ptr(column.name) }
                 .to_string_lossy()
                 .to_string();
-            let type_: &str = column.type_.into();
+
+            let type_: &str = resolved.consume(col_idx, 0).expect("consume").into();
 
             rsx! { <td>{name}{": "}{type_}</td> }
         })
