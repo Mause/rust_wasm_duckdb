@@ -58,7 +58,7 @@ extern "C" {
 #[derive(Debug, Clone)]
 pub struct duckdb_blob {
     data: *const c_void,
-    pub size: i64,
+    pub size: u64,
 }
 impl Drop for duckdb_blob {
     fn drop(&mut self) {
