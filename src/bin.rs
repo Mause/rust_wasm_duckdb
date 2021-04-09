@@ -227,31 +227,33 @@ impl<'a> ResolvedResult<'a> {
                 DuckDBType::DUCKDB_TYPE_BOOLEAN => {
                     DbType::Boolean(duckdb_value_boolean(result, col, row))
                 }
-                DuckDBType::DuckDBTypeTinyint => {
+                DuckDBType::DUCKDB_TYPE_TINYINT => {
                     DbType::Tinyint(duckdb_value_int8(result, col, row))
                 }
-                DuckDBType::DuckDBTypeSmallint => {
+                DuckDBType::DUCKDB_TYPE_SMALLINT => {
                     DbType::Smallint(duckdb_value_int16(result, col, row))
                 }
-                DuckDBType::DuckDBTypeInteger => {
+                DuckDBType::DUCKDB_TYPE_INTEGER => {
                     DbType::Integer(duckdb_value_int32(result, col, row))
                 }
-                DuckDBTypec::DuckDBTypeBigint => {
+                DuckDBType::DUCKDB_TYPE_BIGINT => {
                     DbType::Bigint(duckdb_value_int64(result, col, row))
                 }
-                DuckDBType::DuckDBTypeTime => {
+                DuckDBType::DUCKDB_TYPE_TIME => {
                     DbType::Time(*duckdb_value_time(result, col, row).as_ref().expect("Time"))
                 }
-                DuckDBType::DuckDBTypeTimestamp => DbType::Timestamp(
+                DuckDBType::DUCKDB_TYPE_TIMESTAMP => DbType::Timestamp(
                     *duckdb_value_timestamp(result, col, row)
                         .as_ref()
                         .expect("Timestamp"),
                 ),
-                DuckDBType::DuckDBTypeDate => {
+                DuckDBType::DUCKDB_TYPE_DATE => {
                     DbType::Date(*duckdb_value_date(result, col, row).as_ref().expect("Date"))
                 }
-                DuckDBType::DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
-                DuckDBType::DuckDBTypeDouble => {
+                DuckDBType::DUCKDB_TYPE_FLOAT => {
+                    DbType::Float(duckdb_value_float(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_DOUBLE => {
                     DbType::Double(duckdb_value_double(result, col, row))
                 }
                 DuckDBType::DUCKDB_TYPE_VARCHAR => DbType::String(
