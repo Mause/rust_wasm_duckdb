@@ -14,9 +14,14 @@ impl Display for duckdb_interval {
             .finish()
     }
 }
+impl From<&duckdb_hugeint> for i128 {
+    fn from(value: &duckdb_hugeint) -> i128 {
+        todo!();
+    }
+}
 
 impl Into<i128> for duckdb_hugeint {
-    fn into(&self) -> i128 {
+    fn into(self) -> i128 {
         let sign = if self.upper >= 0 { 1 } else { -1 };
         let upper = if sign == -1 { -self.upper } else { self.upper };
 
@@ -26,6 +31,7 @@ impl Into<i128> for duckdb_hugeint {
         let step: u128 = self.lower.into();
         twisted &= step;
 
+        let twisted: i128 = twisted.try_into().unwrap();
         if sign == 1 {
             twisted
         } else {
@@ -36,8 +42,9 @@ impl Into<i128> for duckdb_hugeint {
 
 impl Display for duckdb_hugeint {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        let value: i128 = self.into();
         f.debug_struct("duckdb_hugeint")
-            .field("value", &self.into())
+            .field("value", &value)
             .finish()
     }
 }
