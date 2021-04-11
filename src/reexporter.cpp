@@ -291,7 +291,7 @@ static duckdb_state duckdb_translate_result(MaterializedQueryResult *result, duc
 enum DUCKDB_TYPE_EXTENDED {
     DUCKDB_TYPE_STRUCT = 15,
     DUCKDB_TYPE_LIST = 16
-}
+};
 
 duckdb_type ConvertCPPTypeToC(LogicalType sql_type)
 {
