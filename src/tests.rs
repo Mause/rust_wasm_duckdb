@@ -106,6 +106,7 @@ speculate! {
         let db = DB::new(
             None
         ).expect("db");
+        println!("db: {:?}", &db);
 
         let conn = db.connection().expect("connection");
 
