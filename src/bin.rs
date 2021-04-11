@@ -353,7 +353,7 @@ extern "C" fn callback(query_: *const c_char) {
         let yo = borrowed.borrow();
         println!("yo: {:?}", yo);
 
-        let conn = yo.as_ref().expect("no db?").connection();
+        let conn = yo.as_ref().expect("no db?").connection().unwrap();
 
         let string = match conn.query(&query) {
             Ok(resolved) => {
