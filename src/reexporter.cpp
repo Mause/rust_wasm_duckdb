@@ -392,6 +392,10 @@ static Value GetCValue(duckdb_result *result, idx_t col, idx_t row)
         auto date = UnsafeFetch<duckdb_date>(result, col, row);
         return Value::DATE(date.year, date.month, date.day);
     }
+    case DUCKDB_TYPE_BLOB: {
+        auto blob = UnsafeFetch<duckdb_blob>(result, col, row);
+        return Value::BLOB((const_data_ptr_t)blob.data, blob.size);
+    }
     default:
         return Value();
     }
