@@ -109,6 +109,7 @@ speculate! {
         println!("db: {:?}", &db);
 
         let conn = db.connection().expect("connection");
+        println!("conn: {:?}", &conn);
 
         conn.query("select 1").expect("query");
     }
