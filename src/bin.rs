@@ -144,9 +144,6 @@ extern "C" {
         row: u64,
     ) -> *const duckdb_interval;
 
-    fn query(db: *const Database, query: *const c_char, result: *const DuckDBResult)
-        -> DuckDBState;
-
     pub fn emscripten_asm_const_int(
         code: *const u8,
         sigPtr: *const u8,
@@ -356,7 +353,9 @@ extern "C" fn callback(query_: *const c_char) {
         let yo = borrowed.borrow();
         println!("yo: {:?}", yo);
 
-        let string = match yo.as_ref().expect("no db?").query(&query) {
+        let conn = yo.as_ref().expect("no db?").connection();
+
+        let string = match conn.query(&query) {
             Ok(resolved) => {
                 println!("columns: {:?}", resolved.columns);
 
