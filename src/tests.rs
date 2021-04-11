@@ -1,3 +1,4 @@
+use crate::db::DB;
 use crate::jse;
 use crate::{
     c_char, callback, duckdb_date, duckdb_time, duckdb_timestamp, emscripten_asm_const_int, hook,
@@ -99,5 +100,17 @@ speculate! {
         };
 
         assert_eq!(rendered_html, r#"<h1 class="title">Hello world!</h1>"#);
+    }
+
+    test "use connection" {
+        let db = DB::new(
+            None
+        ).expect("db");
+        println!("db: {:?}", &db);
+
+        let conn = db.connection().expect("connection");
+        println!("conn: {:?}", &conn);
+
+        conn.query("select 1").expect("query");
     }
 }

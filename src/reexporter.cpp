@@ -430,10 +430,14 @@ extern "C"
 
     void ext_duckdb_close(duckdb_database *database) {
         if (*database) {
-            auto wrapper = (DatabaseData *)database;
+            auto wrapper = (DatabaseData *)*database;
             delete wrapper;
             *database = nullptr;
         }
+    }
+
+    duckdb_connection create_connection(DatabaseData* db) {
+        return (duckdb_connection) new duckdb::Connection(*db->database);
     }
 
     duckdb_state query(DatabaseData *db, const char *query, duckdb_result *out)

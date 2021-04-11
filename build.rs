@@ -35,8 +35,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .arg("-shared")
         .arg("src/reexporter.cpp")
         .arg("-Itarget")
-        .arg("target/duckdb.wasm")
-        // .arg("target/duckdb.cpp")
+        // .arg("target/duckdb.wasm")
+        .arg("target/duckdb.cpp")
         .arg("-o")
         .arg("duckdb.o"));
 
