@@ -436,6 +436,10 @@ extern "C"
         }
     }
 
+    duckdb_connection* create_connection(DatabaseData* db) {
+        return new duckdb::Connection(*db->database);
+    }
+
     duckdb_state query(DatabaseData *db, const char *query, duckdb_result *out)
     {
         duckdb::Connection con(*db->database);

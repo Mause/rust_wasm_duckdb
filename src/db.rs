@@ -4,6 +4,10 @@ use crate::{
 };
 use std::ffi::{CStr, CString};
 
+extern "C" {
+    fn create_connection(db: *const Database) -> *const crate::Connection;
+}
+
 #[derive(Debug)]
 pub struct DB {
     db: *const Database,
@@ -26,11 +30,8 @@ impl DB {
     }
 
     pub fn connection(&self) -> Result<Connection, Box<dyn std::error::Error>> {
-        let connection: *const crate::Connection = malloc(PTR);
+        let connection: *const crate::Connection = unsafe { create_connection(self.db) };
         println!("conn: {:?}", &connection);
-        println!("stat: {:?}", unsafe {
-            duckdb_connect(self.db, connection)
-        }?);
         Ok(Connection { connection })
     }
 
