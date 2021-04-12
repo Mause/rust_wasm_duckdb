@@ -31,7 +31,7 @@ fn get_document_html() -> String {
 
 speculate! {
     before {
-        simple_env_logger::init();
+        pretty_env_logger::init();
         std::panic::set_hook(Box::new(hook));
 
         jse!(b"global.document = {body: {}};\x00");
