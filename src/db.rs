@@ -2,6 +2,7 @@ use crate::{
     duckdb_connect, duckdb_disconnect, duckdb_open, duckdb_query, ext_duckdb_close, malloc,
     Database, DuckDBState, ResolvedResult, PTR,
 };
+use log::info;
 use std::ffi::{CStr, CString};
 
 extern "C" {
@@ -31,13 +32,13 @@ impl DB {
 
     pub fn connection(&self) -> Result<Connection, Box<dyn std::error::Error>> {
         let connection: *const crate::Connection = unsafe { create_connection(self.db) };
-        println!("conn: {:?}", &connection);
+        info!("conn: {:?}", &connection);
         Ok(Connection { connection })
     }
 }
 impl Drop for DB {
     fn drop(&mut self) {
-        println!("Dropping {:?}", self);
+        info!("Dropping {:?}", self);
         unsafe { ext_duckdb_close(self.db) };
     }
 }
@@ -66,7 +67,7 @@ impl Connection {
 }
 impl Drop for Connection {
     fn drop(&mut self) {
-        println!("Dropping {:?}", self);
+        info!("Dropping {:?}", self);
         unsafe { duckdb_disconnect(self.connection) };
     }
 }

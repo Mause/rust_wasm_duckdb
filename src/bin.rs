@@ -16,6 +16,7 @@ use crate::types::{
     duckdb_blob, duckdb_date, duckdb_hugeint, duckdb_interval, duckdb_time, duckdb_timestamp,
     duckdb_type as DuckDBType, DuckDBColumn, DuckDBResult,
 };
+use log::info;
 use render::html;
 use render::{rsx, SimpleElement};
 use std::cell::RefCell;
@@ -190,7 +191,7 @@ impl<'a> Clone for ResolvedResult<'a> {
 }
 impl<'a> Drop for ResolvedResult<'a> {
     fn drop(&mut self) {
-        println!("Dropping {:?}", self);
+        info!("Dropping {:?}", self);
         unsafe { duckdb_destroy_result(self.result) };
     }
 }
@@ -295,10 +296,10 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
     set_page_title("DuckDB Test".to_string());
 
     let db = Some(DB::new(Some("db.db"))?);
-    println!("DB: {:?}", db);
+    info!("DB: {:?}", db);
     database.with(|f| f.replace(db));
 
-    println!("DB open");
+    info!("DB open");
 
     let string = html! { <>{form()}</> };
     set_body_html(string);
@@ -309,7 +310,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 fn hook(info: &std::panic::PanicInfo) {
     let mut msg = info.to_string();
 
-    println!("{:?}", msg);
+    info!("{:?}", msg);
 
     // Add the error stack to our message.
     //
@@ -325,10 +326,10 @@ fn hook(info: &std::panic::PanicInfo) {
     // #[cfg(not(test))]
     // {
     //     let error = js_sys::Error::new("test1");
-    //     println!("{:?}", error);
+    //     info!("{:?}", error);
     // }
     // let stack = error.stack();
-    // println!("{:?}", stack);
+    // info!("{:?}", stack);
     // msg.push_str(stack.as_str().unwrap_or_default());
 
     // Safari's devtools, on the other hand, _do_ mess with logged
@@ -338,7 +339,7 @@ fn hook(info: &std::panic::PanicInfo) {
     msg.push_str("\n\n");
 
     // Finally, log the panic with `console.error`!
-    println!("{}", msg);
+    info!("{}", msg);
 }
 
 #[no_mangle]
@@ -346,18 +347,18 @@ extern "C" fn callback(query_: *const c_char) {
     let org = unsafe { CStr::from_ptr(query_) };
     let query = org.to_string_lossy();
 
-    println!("you called?: {} {:?} {:?}", query, org, query_);
+    info!("you called?: {} {:?} {:?}", query, org, query_);
 
     database.with(|borrowed| {
-        println!("borrowed: {:?}", borrowed);
+        info!("borrowed: {:?}", borrowed);
         let yo = borrowed.borrow();
-        println!("yo: {:?}", yo);
+        info!("yo: {:?}", yo);
 
         let conn = yo.as_ref().expect("no db?").connection().unwrap();
 
         let string = match conn.query(&query) {
             Ok(resolved) => {
-                println!("columns: {:?}", resolved.columns);
+                info!("columns: {:?}", resolved.columns);
 
                 let table = Table {
                     resolved: &resolved,
@@ -380,13 +381,15 @@ extern "C" fn callback(query_: *const c_char) {
             }
         };
 
-        println!("{}", string);
+        info!("{}", string);
 
         set_body_html(string);
     });
 }
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
+    pretty_env_logger::init();
+
     std::panic::set_hook(Box::new(hook));
 
     unsafe {
