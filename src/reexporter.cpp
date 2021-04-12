@@ -2,6 +2,19 @@
 #include "duckdb.hpp"
 #include <iostream>
 
+using namespace duckdb;
+
+struct DatabaseData {
+  DatabaseData() : database(nullptr) {}
+  ~DatabaseData() {
+    if (database) {
+      delete database;
+    }
+  }
+
+  duckdb::DuckDB *database;
+};
+
 extern "C"
 {
     void* mallocy() {
