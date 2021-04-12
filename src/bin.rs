@@ -3,6 +3,8 @@
 #![feature(try_trait)]
 #![feature(static_nobundle)]
 #![feature(proc_macro_hygiene)]
+#![allow(unused_parens)]
+#![allow(unused_braces)]
 
 use crate::state::DuckDBState;
 use libc::c_void;
@@ -12,12 +14,17 @@ use crate::db::DB;
 use crate::rendering::Table;
 use crate::types::{
     duckdb_blob, duckdb_date, duckdb_hugeint, duckdb_interval, duckdb_time, duckdb_timestamp,
+    duckdb_type as DuckDBType, DuckDBColumn, DuckDBResult,
 };
 use render::html;
+use render::{rsx, SimpleElement};
+use std::cell::RefCell;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
+use std::thread_local;
 use strum_macros::IntoStaticStr;
 
+mod bindings;
 mod db;
 mod jse;
 mod rendering;
@@ -25,40 +32,6 @@ mod state;
 #[cfg(test)]
 mod tests;
 mod types;
-
-#[repr(C)]
-#[derive(Debug, IntoStaticStr, Clone, Copy)]
-pub enum DuckDBType {
-    DuckDBTypeInvalid = 0,
-    // bool
-    DuckDBTypeBoolean = 1,
-    // int8_t
-    DuckDBTypeTinyint = 2,
-    // int16_t
-    DuckDBTypeSmallint = 3,
-    // int32_t
-    DuckDBTypeInteger = 4,
-    // int64_t
-    DuckDBTypeBigint = 5,
-    // float
-    DuckDBTypeFloat = 6,
-    // double
-    DuckDBTypeDouble = 7,
-    // duckdb_timestamp
-    DuckDBTypeTimestamp = 8,
-    // duckdb_date
-    DuckDBTypeDate = 9,
-    // duckdb_time
-    DuckDBTypeTime = 10,
-    // duckdb_interval
-    DuckDBTypeInterval = 11,
-    // duckdb_hugeint
-    DuckDBTypeHugeint = 12,
-    // const char*
-    DuckDBTypeVarchar = 13,
-    // duckdb_blob
-    DuckDBTypeBlob = 14,
-}
 
 #[derive(Debug, IntoStaticStr)]
 enum DbType {
@@ -104,26 +77,8 @@ impl ToString for DbType {
     }
 }
 
-#[repr(C)]
-#[derive(Debug)]
-struct DuckDBColumn {
-    data: i32,
-    nullmask: i32,
-    type_: DuckDBType,
-    name: *const c_char,
-}
-
 type Connection = i32;
 type Database = i32;
-
-#[repr(C)]
-#[derive(Debug)]
-struct DuckDBResult {
-    column_count: i64,
-    row_count: i64,
-    columns: *mut DuckDBColumn,
-    error_message: *const c_char,
-}
 
 extern "C" {
     fn duckdb_open(path: *const c_char, database: *const Database) -> DuckDBState;
@@ -143,54 +98,51 @@ extern "C" {
     fn duckdb_destroy_result(result: *const DuckDBResult);
 
     /// Converts the specified value to a bool. Returns false on failure or NULL.
-    fn duckdb_value_boolean(result: *const DuckDBResult, col: i64, row: i64) -> bool;
+    fn duckdb_value_boolean(result: *const DuckDBResult, col: u64, row: u64) -> bool;
     /// Converts the specified value to an int8_t. Returns 0 on failure or NULL.
-    fn duckdb_value_int8(result: *const DuckDBResult, col: i64, row: i64) -> i8;
+    fn duckdb_value_int8(result: *const DuckDBResult, col: u64, row: u64) -> i8;
     /// Converts the specified value to an int16_t. Returns 0 on failure or NULL.
-    fn duckdb_value_int16(result: *const DuckDBResult, col: i64, row: i64) -> i16;
+    fn duckdb_value_int16(result: *const DuckDBResult, col: u64, row: u64) -> i16;
     /// Converts the specified value to an int64_t. Returns 0 on failure or NULL.
-    fn duckdb_value_int32(result: *const DuckDBResult, col: i64, row: i64) -> i32;
+    fn duckdb_value_int32(result: *const DuckDBResult, col: u64, row: u64) -> i32;
     /// Converts the specified value to an int64_t. Returns 0 on failure or NULL.
-    fn duckdb_value_int64(result: *const DuckDBResult, col: i64, row: i64) -> i64;
+    fn duckdb_value_int64(result: *const DuckDBResult, col: u64, row: u64) -> i64;
     /// Converts the specified value to an uint8_t. Returns 0 on failure or NULL.
-    fn duckdb_value_uint8(result: *const DuckDBResult, col: i64, row: i64) -> u8;
+    fn duckdb_value_uint8(result: *const DuckDBResult, col: u64, row: u64) -> u8;
     /// Converts the specified value to an uint16_t. Returns 0 on failure or NULL.
-    fn duckdb_value_uint16(result: *const DuckDBResult, col: i64, row: i64) -> u16;
+    fn duckdb_value_uint16(result: *const DuckDBResult, col: u64, row: u64) -> u16;
     /// Converts the specified value to an uint64_t. Returns 0 on failure or NULL.
-    fn duckdb_value_uint32(result: *const DuckDBResult, col: i64, row: i64) -> u32;
+    fn duckdb_value_uint32(result: *const DuckDBResult, col: u64, row: u64) -> u32;
     /// Converts the specified value to an uint64_t. Returns 0 on failure or NULL.
-    fn duckdb_value_uint64(result: *const DuckDBResult, col: i64, row: i64) -> u64;
+    fn duckdb_value_uint64(result: *const DuckDBResult, col: u64, row: u64) -> u64;
     /// Converts the specified value to a float. Returns 0.0 on failure or NULL.
-    fn duckdb_value_float(result: *const DuckDBResult, col: i64, row: i64) -> f32;
+    fn duckdb_value_float(result: *const DuckDBResult, col: u64, row: u64) -> f32;
     /// Converts the specified value to a double. Returns 0.0 on failure or NULL.
-    fn duckdb_value_double(result: *const DuckDBResult, col: i64, row: i64) -> f64;
+    fn duckdb_value_double(result: *const DuckDBResult, col: u64, row: u64) -> f64;
     /// Converts the specified value to a string. Returns nullptr on failure or NULL. The result must be freed with free.
-    fn duckdb_value_varchar(result: *const DuckDBResult, col: i64, row: i64) -> *const c_char;
+    fn duckdb_value_varchar(result: *const DuckDBResult, col: u64, row: u64) -> *const c_char;
     /// Fetches a blob from a result set column. Returns a blob with blob.data set to nullptr on failure or NULL. The
     /// resulting "blob.data" must be freed with free.
-    fn duckdb_value_blob(result: *const DuckDBResult, blob: *const duckdb_blob, col: i64, row: i64);
+    fn duckdb_value_blob(result: *const DuckDBResult, blob: *const duckdb_blob, col: u64, row: u64);
 
-    fn duckdb_value_date(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_date;
-    fn duckdb_value_time(result: *const DuckDBResult, col: i64, row: i64) -> *const duckdb_time;
+    fn duckdb_value_date(result: *const DuckDBResult, col: u64, row: u64) -> *const duckdb_date;
+    fn duckdb_value_time(result: *const DuckDBResult, col: u64, row: u64) -> *const duckdb_time;
     fn duckdb_value_timestamp(
         result: *const DuckDBResult,
-        col: i64,
-        row: i64,
+        col: u64,
+        row: u64,
     ) -> *const duckdb_timestamp;
 
     fn duckdb_value_hugeint(
         result: *const DuckDBResult,
-        col: i64,
-        row: i64,
+        col: u64,
+        row: u64,
     ) -> *const duckdb_hugeint;
     fn duckdb_value_interval(
         result: *const DuckDBResult,
-        col: i64,
-        row: i64,
+        col: u64,
+        row: u64,
     ) -> *const duckdb_interval;
-
-    fn query(db: *const Database, query: *const c_char, result: *const DuckDBResult)
-        -> DuckDBState;
 
     pub fn emscripten_asm_const_int(
         code: *const u8,
@@ -257,11 +209,11 @@ impl<'a> ResolvedResult<'a> {
         }
     }
 
-    fn column(&self, col: i64) -> &DuckDBColumn {
-        &self.columns[<usize as TryFrom<i64>>::try_from(col).expect("Too big")]
+    fn column(&self, col: u64) -> &DuckDBColumn {
+        &self.columns[<usize as TryFrom<u64>>::try_from(col).expect("Too big")]
     }
 
-    fn consume(&self, col: i64, row: i64) -> Result<DbType, Box<dyn std::error::Error>> {
+    fn consume(&self, col: u64, row: u64) -> Result<DbType, Box<dyn std::error::Error>> {
         use crate::DuckDBType::*;
 
         let column: &DuckDBColumn = self.column(col);
@@ -269,40 +221,54 @@ impl<'a> ResolvedResult<'a> {
 
         Ok(unsafe {
             match &column.type_ {
-                DuckDBTypeBoolean => DbType::Boolean(duckdb_value_boolean(result, col, row)),
-                DuckDBTypeTinyint => DbType::Tinyint(duckdb_value_int8(result, col, row)),
-                DuckDBTypeSmallint => DbType::Smallint(duckdb_value_int16(result, col, row)),
-                DuckDBTypeInteger => DbType::Integer(duckdb_value_int32(result, col, row)),
-                DuckDBTypeBigint => DbType::Bigint(duckdb_value_int64(result, col, row)),
-                DuckDBTypeTime => {
+                DuckDBType::DUCKDB_TYPE_BOOLEAN => {
+                    DbType::Boolean(duckdb_value_boolean(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_TINYINT => {
+                    DbType::Tinyint(duckdb_value_int8(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_SMALLINT => {
+                    DbType::Smallint(duckdb_value_int16(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_INTEGER => {
+                    DbType::Integer(duckdb_value_int32(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_BIGINT => {
+                    DbType::Bigint(duckdb_value_int64(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_TIME => {
                     DbType::Time(*duckdb_value_time(result, col, row).as_ref().expect("Time"))
                 }
-                DuckDBTypeTimestamp => DbType::Timestamp(
+                DuckDBType::DUCKDB_TYPE_TIMESTAMP => DbType::Timestamp(
                     *duckdb_value_timestamp(result, col, row)
                         .as_ref()
                         .expect("Timestamp"),
                 ),
-                DuckDBTypeDate => {
+                DuckDBType::DUCKDB_TYPE_DATE => {
                     DbType::Date(*duckdb_value_date(result, col, row).as_ref().expect("Date"))
                 }
-                DuckDBTypeFloat => DbType::Float(duckdb_value_float(result, col, row)),
-                DuckDBTypeDouble => DbType::Double(duckdb_value_double(result, col, row)),
-                DuckDBTypeVarchar => DbType::String(
+                DuckDBType::DUCKDB_TYPE_FLOAT => {
+                    DbType::Float(duckdb_value_float(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_DOUBLE => {
+                    DbType::Double(duckdb_value_double(result, col, row))
+                }
+                DuckDBType::DUCKDB_TYPE_VARCHAR => DbType::String(
                     CStr::from_ptr(duckdb_value_varchar(result, col, row))
                         .to_string_lossy()
                         .to_string(),
                 ),
-                DuckDBTypeHugeint => DbType::Hugeint(
+                DuckDBType::DUCKDB_TYPE_HUGEINT => DbType::Hugeint(
                     *duckdb_value_hugeint(result, col, row)
                         .as_ref()
                         .expect("Hugeint"),
                 ),
-                DuckDBTypeBlob => {
+                DuckDBType::DUCKDB_TYPE_BLOB => {
                     let ptr: *const duckdb_blob = malloc(PTR);
                     duckdb_value_blob(result, ptr, col, row);
                     DbType::Blob(ptr.as_ref().expect("Blob").clone())
                 }
-                DuckDBTypeInterval => DbType::Interval(
+                DuckDBType::DUCKDB_TYPE_INTERVAL => DbType::Interval(
                     *duckdb_value_interval(result, col, row)
                         .as_ref()
                         .expect("Interval"),
@@ -312,12 +278,6 @@ impl<'a> ResolvedResult<'a> {
         })
     }
 }
-
-use render::{rsx, SimpleElement};
-use std::borrow::{Borrow, BorrowMut};
-use std::cell::RefCell;
-use std::sync::{Arc, Mutex};
-use std::thread_local;
 
 thread_local! {
     static database: RefCell<Option<DB>> = RefCell::new(None);
@@ -393,7 +353,9 @@ extern "C" fn callback(query_: *const c_char) {
         let yo = borrowed.borrow();
         println!("yo: {:?}", yo);
 
-        let string = match yo.as_ref().expect("no db?").query(&query) {
+        let conn = yo.as_ref().expect("no db?").connection().unwrap();
+
+        let string = match conn.query(&query) {
             Ok(resolved) => {
                 println!("columns: {:?}", resolved.columns);
 

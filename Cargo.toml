@@ -6,6 +6,7 @@ path = "src/bin.rs"
 cc = { version = "*", features = ['parallel'] }
 shellexpand = "*"
 which = "*"
+bindgen = "0.58.1"
 
 [dependencies]
 count_tts = "*"
