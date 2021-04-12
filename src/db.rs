@@ -1,5 +1,5 @@
 use crate::{
-    duckdb_connect, duckdb_disconnect, duckdb_open, duckdb_query, ext_duckdb_close, malloc, query,
+    duckdb_connect, duckdb_disconnect, duckdb_open, duckdb_query, ext_duckdb_close, malloc,
     Database, DuckDBState, ResolvedResult, PTR,
 };
 use std::ffi::{CStr, CString};
@@ -33,23 +33,6 @@ impl DB {
         let connection: *const crate::Connection = unsafe { create_connection(self.db) };
         println!("conn: {:?}", &connection);
         Ok(Connection { connection })
-    }
-
-    pub fn query(&self, que: &str) -> Result<ResolvedResult, Box<dyn std::error::Error>> {
-        unsafe {
-            let s = CString::new(que).expect("string");
-
-            let result = malloc(PTR);
-            let status = query(self.db, s.as_ptr(), result);
-
-            if matches!(status, DuckDBState::DuckDBError) {
-                let error_message = CStr::from_ptr((*result).error_message).to_string_lossy();
-
-                Err(string_error::new_err(&*error_message))
-            } else {
-                Ok(ResolvedResult::new(result))
-            }
-        }
     }
 }
 impl Drop for DB {
