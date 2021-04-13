@@ -1,9 +1,25 @@
 #![feature(try_trait)]
 
-use std::env;
+use std::env::{join_paths, set_var, split_paths, var};
+use std::path::PathBuf;
+use which::which;
+
+fn exists(s: String) -> String {
+    let path = std::path::Path::new(&s);
+    assert_eq!(path.exists(), true, "{}", &s);
+    return path.to_string_lossy().to_string();
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let emscripten_dir = env::var("EMSCRIPTEN").expect("failed to get envvar EMSCRIPTEN");
+    let emcc_path = which("emcc").expect("emar");
+    let emscripten_path = emcc_path.parent().unwrap();
+
+    let clang_path = emscripten_path.parent().unwrap().join("bin");
+
+    let mut path = split_paths(&var("PATH").unwrap()).collect::<Vec<PathBuf>>();
+    path.push((*clang_path.to_string_lossy()).into());
+    eprintln!("{:?}", path);
+    set_var("PATH", join_paths(path)?);
 
     cc::Build::new()
         .flag("-fvisibility=default")
@@ -12,21 +28,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .flag("-DDUCKDB_BUILD_LIBRARY=1")
         .flag("-fexceptions")
         .flag("-Wno-unused-parameter")
+        .cpp(true)
         .flag("-shared")
+        .flag("-std=gnu++17")
         .file("src/reexporter.cpp")
-        .include(format!("-I{}/system/include", emscripten_dir))
-        .include(format!("-I{}/system/include/libc", emscripten_dir))
-        .include(format!("-I{}/system/include/libcxx", emscripten_dir))
+        .include(exists(format!(
+            "{}/system/lib/libcxx/include",
+            emscripten_path.display()
+        )))
+        .include(exists(format!(
+            "{}/system/lib/libcxxabi/include",
+            emscripten_path.display()
+        )))
+        .include(exists(format!(
+            "{}/system/include",
+            emscripten_path.display()
+        )))
+        .include(exists(format!(
+            "{}/system/lib/libc/musl/include",
+            emscripten_path.display()
+        )))
+        .include(exists(format!(
+            "{}/system/lib/libc/musl/arch/emscripten",
+            emscripten_path.display()
+        )))
         .include("target")
         .file("target/duckdb.cpp")
         .compile("duckdb");
 
     #[cfg(windows)]
     {
-        let p = emar_path.parent().unwrap().parent().unwrap().join("bin");
-
-        println!("{:?}", p);
-        std::env::set_var("LIBCLANG_PATH", &p);
+        println!("{:?}", clang_path);
+        std::env::set_var("LIBCLANG_PATH", &clang_path);
     }
 
     bindgen::builder()
@@ -35,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         /*
         .clang_arg(format!(
             "-I{}",
-            emar_path
+            emscripten_path
                 .join("../cache/sysroot/include")
                 .to_str()
                 .expect("include path")
