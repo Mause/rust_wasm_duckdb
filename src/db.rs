@@ -30,7 +30,8 @@ impl DB {
     }
 
     pub fn connection(&self) -> Result<Connection, Box<dyn std::error::Error>> {
-        let connection: *const crate::Connection = unsafe { create_connection(self.db) };
+        let connection: *const crate::Connection = malloc(PTR);
+        unsafe { duckdb_connect(self.db, connection) }?;
         println!("conn: {:?}", &connection);
         Ok(Connection { connection })
     }
