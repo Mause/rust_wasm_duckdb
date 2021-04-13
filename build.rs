@@ -52,6 +52,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "{}/system/lib/libc/musl/arch/emscripten",
             emscripten_path.display()
         )))
+        .include(exists(format!(
+            "{}/system/lib/libc/musl/arch/generic",
+            emscripten_path.display()
+        )))
         .include("target")
         .file("target/duckdb.cpp")
         .compile("duckdb");
