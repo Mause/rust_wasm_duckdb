@@ -24,7 +24,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     bindgen::builder()
         .header("target/duckdb.h")
-        // .detect_include_paths(true)
+        .detect_include_paths(true)
+        /*
         .clang_arg(format!(
             "-I{}",
             emar_path
@@ -32,6 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .to_str()
                 .expect("include path")
         ))
+        */
         .generate_block(true)
         .rustified_enum(".*")
         // .clang_arg("-DDUCKDB_BUILD_LIBRARY")
