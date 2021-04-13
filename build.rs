@@ -1,6 +1,10 @@
 #![feature(try_trait)]
 
+use std::env;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let emscripten_dir = env::var("EMSCRIPTEN").expect("failed to get envvar EMSCRIPTEN");
+
     cc::Build::new()
         .flag("-fvisibility=default")
         .flag("-fPIC")
@@ -10,7 +14,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .flag("-Wno-unused-parameter")
         .flag("-shared")
         .file("src/reexporter.cpp")
-        .flag("-Itarget")
+        .include(format!("-I{}/system/include", emscripten_dir))
+        .include(format!("-I{}/system/include/libc", emscripten_dir))
+        .include(format!("-I{}/system/include/libcxx", emscripten_dir))
+        .include("target")
         .file("target/duckdb.cpp")
         .compile("duckdb");
 
