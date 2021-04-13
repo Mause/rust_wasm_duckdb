@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .file("src/reexporter.cpp")
         .flag("-Itarget")
         .file("target/duckdb.cpp")
-        .compile("duckdb")?;
+        .compile("duckdb");
 
     #[cfg(windows)]
     {
