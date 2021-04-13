@@ -1,4 +1,3 @@
-#include <emscripten.h>
 #include "duckdb.hpp"
 #include <iostream>
 
