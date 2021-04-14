@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .flag("-DDUCKDB_BUILD_LIBRARY=1")
         .flag("-fexceptions")
         .flag("-Wno-unused-parameter")
-        .cpp(true)
+        //.cpp(true)
         .flag("-shared")
         .flag("-std=gnu++17")
         .file("src/reexporter.cpp")
