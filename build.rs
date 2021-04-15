@@ -25,6 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .arg("-DDUCKDB_NO_THREADS=1")
         .arg("-sWASM=1")
         .arg("-DDUCKDB_BUILD_LIBRARY=1")
+        .arg("-DBUILD_HTTPFS_EXTENSION=1")
         .arg("-sWARN_ON_UNDEFINED_SYMBOLS=1")
         .arg("-sALLOW_MEMORY_GROWTH=1")
         .arg("-sUSE_PTHREADS=0")
