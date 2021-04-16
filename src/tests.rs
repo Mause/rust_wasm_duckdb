@@ -73,6 +73,30 @@ speculate! {
         assert_eq!(name, "html");
     }
 
+    test "roundtrip" {
+        fn internal() -> Result<(), Box<dyn std::error::Error>> {
+            use crate::DbType::Date;
+
+            let db = DB::new(None)?;
+
+            let conn = db.connection()?;
+
+            conn.query("create table test (stamp date);")?;
+
+            conn.query("insert into test values (current_date);")?;
+
+            let result = conn.query("select stamp from test")?;
+
+            let data = result.consume(0, 0)?;
+
+            assert_eq!(matches!(data, Date(date)), true);
+
+            Ok(())
+        }
+
+        internal().unwrap();
+    }
+
     test "to_string_works" {
         let value = duckdb_timestamp::new(duckdb_date::new(1996, 8, 7), duckdb_time::new(12, 10, 0, 0));
 
