@@ -16,13 +16,14 @@ impl Display for duckdb_interval {
     }
 }
 impl From<&duckdb_hugeint> for i128 {
-    fn from(value: &duckdb_hugeint) -> i128 {
-        let upper = if sign == -1 { -self.upper } else { self.upper };
+    fn from(inst: &duckdb_hugeint) -> i128 {
+        let sign = if inst.upper >= 0 { 1 } else { -1 };
+        let upper = if sign == -1 { -inst.upper } else { inst.upper };
 
         let mut twisted: i128 = upper.into();
         let mut twisted: u128 = twisted.try_into().unwrap();
         twisted <<= 64;
-        let step: u128 = self.lower.into();
+        let step: u128 = inst.lower.into();
         twisted &= step;
 
         let twisted: i128 = twisted.try_into().unwrap();

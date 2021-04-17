@@ -1,7 +1,6 @@
 use crate::{DbType, DuckDBColumn, ResolvedResult};
 use render::{component, rsx, Render, SimpleElement};
 use std::ffi::CStr;
-use std::fs::DirEntry;
 use std::iter::{FromIterator, Map};
 
 pub trait Contain<I: Render> {

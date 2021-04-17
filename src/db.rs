@@ -1,7 +1,7 @@
 use crate::types::{duckdb_connection, duckdb_database};
 use crate::{
-    duckdb_connect, duckdb_connection, duckdb_database, duckdb_disconnect, duckdb_open,
-    duckdb_query, ext_duckdb_close, malloc, DuckDBState, ResolvedResult, PTR,
+    duckdb_disconnect, duckdb_open, duckdb_query, ext_duckdb_close, malloc, DuckDBState,
+    ResolvedResult, PTR,
 };
 use std::ffi::{CStr, CString};
 
