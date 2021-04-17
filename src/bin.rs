@@ -17,7 +17,7 @@ use crate::types::{
     duckdb_type as DuckDBType, DuckDBColumn, DuckDBResult,
 };
 use render::html;
-use render::{rsx, SimpleElement};
+use render::rsx;
 use std::cell::RefCell;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};

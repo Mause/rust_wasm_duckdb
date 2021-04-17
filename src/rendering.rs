@@ -1,5 +1,5 @@
 use crate::{DbType, DuckDBColumn, ResolvedResult};
-use render::{component, rsx, Render};
+use render::{component, rsx, Render, SimpleElement};
 use std::ffi::CStr;
 use std::fs::DirEntry;
 use std::iter::{FromIterator, Map};
@@ -39,7 +39,7 @@ impl Render for DbType {
 }
 
 #[component]
-pub fn Table<'a>(resolved: &'a ResolvedResult<'a>) -> render::SimpleElement {
+pub fn Table<'a>(resolved: &'a ResolvedResult<'a>) -> SimpleElement {
     let head = (0..resolved.resolved.column_count)
         .map(|col_idx| {
             let column: &DuckDBColumn = resolved.column(col_idx);
