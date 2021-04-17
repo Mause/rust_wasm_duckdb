@@ -283,11 +283,34 @@ thread_local! {
     static database: RefCell<Option<DB>> = RefCell::new(None);
 }
 
-fn form() -> SimpleElement<'static, SimpleElement<'static, ()>> {
+use std::fs::DirEntry;
+
+use crate::rendering::Container;
+
+fn eff(f: Result<DirEntry, std::io::Error>) -> SimpleElement<'static, String> {
+    rsx! { <li>{f.unwrap().path().to_str().unwrap().to_string()}</li> }
+}
+
+fn form() -> SimpleElement<
+    'static,
+    (
+        SimpleElement<'static, SimpleElement<'static, ()>>,
+        SimpleElement<'static, Container<SimpleElement<'static, std::string::String>>>,
+    ),
+> {
+    let files = std::fs::read_dir(std::path::Path::new("/")).expect("files");
+    let files = files.map(eff);
+    let files = Container(files.collect());
+
     rsx! {
-        <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
-            <input placeholder={"select random()"} autofocus={"true"} name={"query"}></input>
-        </form>
+        <div>
+            <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
+                <input placeholder={"select random()"} autofocus={"true"} name={"query"}></input>
+            </form>
+            <ul>
+                {files}
+            </ul>
+        </div>
     }
 }
 

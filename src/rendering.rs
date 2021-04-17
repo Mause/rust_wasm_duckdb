@@ -17,7 +17,7 @@ where
     }
 }
 
-struct Container<T: Render>(Vec<T>);
+pub struct Container<T: Render>(pub Vec<T>);
 impl<T: Render> Render for Container<T> {
     fn render_into<W>(self, writer: &mut W) -> Result<(), std::fmt::Error>
     where
