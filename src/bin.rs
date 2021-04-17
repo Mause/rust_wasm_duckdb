@@ -11,13 +11,12 @@ use libc::c_void;
 #[allow(non_camel_case_types)]
 pub type c_char = i8;
 use crate::db::DB;
-use crate::rendering::Table;
+use crate::rendering::{form, Table};
 use crate::types::{
-    duckdb_blob, duckdb_date, duckdb_hugeint, duckdb_interval, duckdb_time, duckdb_timestamp,
-    duckdb_type as DuckDBType, DuckDBColumn, DuckDBResult,
+    duckdb_blob, duckdb_connection, duckdb_database, duckdb_date, duckdb_hugeint, duckdb_interval,
+    duckdb_time, duckdb_timestamp, duckdb_type as DuckDBType, DuckDBColumn, DuckDBResult,
 };
 use render::html;
-use render::{rsx, SimpleElement};
 use std::cell::RefCell;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
@@ -77,20 +76,17 @@ impl ToString for DbType {
     }
 }
 
-type Connection = i32;
-type Database = i32;
-
 extern "C" {
-    fn duckdb_open(path: *const c_char, database: *const Database) -> DuckDBState;
+    fn duckdb_open(path: *const c_char, database: *const duckdb_database) -> DuckDBState;
 
-    fn duckdb_connect(db: *const Database, con: *const Connection) -> DuckDBState;
+    fn duckdb_connect(db: *const duckdb_database, con: *const duckdb_connection) -> DuckDBState;
 
-    fn duckdb_disconnect(con: *const Connection);
+    fn duckdb_disconnect(con: *const duckdb_connection);
 
-    fn ext_duckdb_close(db: *const Database);
+    fn ext_duckdb_close(db: *const duckdb_database);
 
     fn duckdb_query(
-        con: *const Connection,
+        con: *const duckdb_connection,
         query: *const c_char,
         result: *const DuckDBResult,
     ) -> DuckDBState;
@@ -214,8 +210,6 @@ impl<'a> ResolvedResult<'a> {
     }
 
     fn consume(&self, col: u64, row: u64) -> Result<DbType, Box<dyn std::error::Error>> {
-        use crate::DuckDBType::*;
-
         let column: &DuckDBColumn = self.column(col);
         let result = self.result;
 
@@ -280,15 +274,7 @@ impl<'a> ResolvedResult<'a> {
 }
 
 thread_local! {
-    static database: RefCell<Option<DB>> = RefCell::new(None);
-}
-
-fn form() -> SimpleElement<'static, SimpleElement<'static, ()>> {
-    rsx! {
-        <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
-            <input placeholder={"select random()"} autofocus={"true"} name={"query"}></input>
-        </form>
-    }
+    static DATABASE: RefCell<Option<DB>> = RefCell::new(None);
 }
 
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
@@ -296,7 +282,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     let db = Some(DB::new(Some("db.db"))?);
     println!("DB: {:?}", db);
-    database.with(|f| f.replace(db));
+    DATABASE.with(|f| f.replace(db));
 
     println!("DB open");
 
@@ -348,7 +334,7 @@ extern "C" fn callback(query_: *const c_char) {
 
     println!("you called?: {} {:?} {:?}", query, org, query_);
 
-    database.with(|borrowed| {
+    DATABASE.with(|borrowed| {
         println!("borrowed: {:?}", borrowed);
         let yo = borrowed.borrow();
         println!("yo: {:?}", yo);
