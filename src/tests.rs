@@ -52,11 +52,11 @@ speculate! {
         callback(string.as_ptr());
     }
 
-    /*
     test "version check" {
         basic_test("pragma version");
     }
 
+    /*
     test "blob" {
         basic_test("select 'a'::blob");
     }
@@ -71,6 +71,30 @@ speculate! {
         let name = &resultant.as_element().expect("as_element").name.local;
 
         assert_eq!(name, "html");
+    }
+
+    test "roundtrip" {
+        fn internal() -> Result<(), Box<dyn std::error::Error>> {
+            use crate::DbType::Date;
+
+            let db = DB::new(None)?;
+
+            let conn = db.connection()?;
+
+            conn.query("create table test (stamp date);")?;
+
+            conn.query("insert into test values (current_date);")?;
+
+            let result = conn.query("select stamp from test")?;
+
+            let data = result.consume(0, 0)?;
+
+            assert_eq!(matches!(data, Date(date)), true);
+
+            Ok(())
+        }
+
+        internal().unwrap();
     }
 
     test "to_string_works" {
