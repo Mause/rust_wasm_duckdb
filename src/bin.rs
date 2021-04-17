@@ -11,7 +11,7 @@ use libc::c_void;
 #[allow(non_camel_case_types)]
 pub type c_char = i8;
 use crate::db::DB;
-use crate::rendering::Table;
+use crate::rendering::{form, Table};
 use crate::types::{
     duckdb_blob, duckdb_date, duckdb_hugeint, duckdb_interval, duckdb_time, duckdb_timestamp,
     duckdb_type as DuckDBType, DuckDBColumn, DuckDBResult,

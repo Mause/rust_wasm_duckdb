@@ -81,7 +81,7 @@ pub fn Table<'a>(resolved: &'a ResolvedResult<'a>) -> render::SimpleElement {
     }
 }
 
-fn form() -> SimpleElement<
+pub fn form() -> SimpleElement<
     'static,
     (
         SimpleElement<'static, SimpleElement<'static, ()>>,
