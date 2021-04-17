@@ -4,6 +4,7 @@ use crate::{
     c_char, callback, duckdb_date, duckdb_time, duckdb_timestamp, emscripten_asm_const_int, hook,
     main,
 };
+use log::info;
 use speculate::speculate;
 use std::ffi::{CStr, CString};
 
@@ -30,6 +31,7 @@ fn get_document_html() -> String {
 
 speculate! {
     before {
+        pretty_env_logger::init();
         std::panic::set_hook(Box::new(hook));
 
         jse!(b"global.document = {body: {}};\x00");
@@ -130,10 +132,10 @@ speculate! {
         let db = DB::new(
             None
         ).expect("db");
-        println!("db: {:?}", &db);
+        info!("db: {:?}", &db);
 
         let conn = db.connection().expect("connection");
-        println!("conn: {:?}", &conn);
+        info!("conn: {:?}", &conn);
 
         conn.query("select 1").expect("query");
     }
