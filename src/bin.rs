@@ -11,13 +11,13 @@ use libc::c_void;
 #[allow(non_camel_case_types)]
 pub type c_char = i8;
 use crate::db::DB;
-use crate::rendering::Table;
+use crate::rendering::{form, Table};
 use crate::types::{
     duckdb_blob, duckdb_date, duckdb_hugeint, duckdb_interval, duckdb_time, duckdb_timestamp,
     duckdb_type as DuckDBType, DuckDBColumn, DuckDBResult,
 };
 use render::html;
-use render::{rsx, SimpleElement};
+use render::rsx;
 use std::cell::RefCell;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
@@ -281,14 +281,6 @@ impl<'a> ResolvedResult<'a> {
 
 thread_local! {
     static database: RefCell<Option<DB>> = RefCell::new(None);
-}
-
-fn form() -> SimpleElement<'static, SimpleElement<'static, ()>> {
-    rsx! {
-        <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
-            <input placeholder={"select random()"} autofocus={"true"} name={"query"}></input>
-        </form>
-    }
 }
 
 unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {

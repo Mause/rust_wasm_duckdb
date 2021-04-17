@@ -1,6 +1,7 @@
 use crate::{DbType, DuckDBColumn, ResolvedResult};
-use render::{component, rsx, Render};
+use render::{component, rsx, Render, SimpleElement};
 use std::ffi::CStr;
+use std::fs::DirEntry;
 use std::iter::{FromIterator, Map};
 
 trait Contain<I: Render> {
@@ -17,7 +18,7 @@ where
     }
 }
 
-struct Container<T: Render>(Vec<T>);
+pub struct Container<T: Render>(pub Vec<T>);
 impl<T: Render> Render for Container<T> {
     fn render_into<W>(self, writer: &mut W) -> Result<(), std::fmt::Error>
     where
@@ -38,7 +39,7 @@ impl Render for DbType {
 }
 
 #[component]
-pub fn Table<'a>(resolved: &'a ResolvedResult<'a>) -> render::SimpleElement {
+pub fn Table<'a>(resolved: &'a ResolvedResult<'a>) -> SimpleElement {
     let head = (0..resolved.resolved.column_count)
         .map(|col_idx| {
             let column: &DuckDBColumn = resolved.column(col_idx);
@@ -77,5 +78,31 @@ pub fn Table<'a>(resolved: &'a ResolvedResult<'a>) -> render::SimpleElement {
             <thead>{head}</thead>
             <tbody>{body}</tbody>
         </table>
+    }
+}
+
+pub fn form() -> SimpleElement<
+    'static,
+    (
+        SimpleElement<'static, SimpleElement<'static, ()>>,
+        SimpleElement<'static, Container<SimpleElement<'static, std::string::String>>>,
+    ),
+> {
+    let files = Container(
+        std::fs::read_dir(std::path::Path::new("/"))
+            .expect("files")
+            .map(|f| rsx! { <li>{f.unwrap().path().to_str().unwrap().to_string()}</li> })
+            .collect(),
+    );
+
+    rsx! {
+        <div>
+            <form onsubmit={"event.preventDefault(); Module.ccall('callback', 'void', ['string'], [document.forms[0].query.value])"}>
+                <input placeholder={"select random()"} autofocus={"true"} name={"query"}></input>
+            </form>
+            <ul>
+                {files}
+            </ul>
+        </div>
     }
 }
