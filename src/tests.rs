@@ -56,7 +56,6 @@ speculate! {
         basic_test("pragma version");
     }
 
-    /*
     test "blob" {
         basic_test("select 'a'::blob");
     }
