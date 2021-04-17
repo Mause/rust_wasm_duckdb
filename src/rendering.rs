@@ -4,11 +4,11 @@ use std::ffi::CStr;
 use std::fs::DirEntry;
 use std::iter::{FromIterator, Map};
 
-trait Contain<I: Render> {
+pub trait Contain<I: Render> {
     fn contain(self) -> Container<I>;
 }
 
-impl<B: Render, I: DoubleEndedIterator, F> Contain<B> for Map<I, F>
+impl<B: Render, I: Iterator, F> Contain<B> for Map<I, F>
 where
     F: FnMut(I::Item) -> B,
     Vec<B>: FromIterator<B>,

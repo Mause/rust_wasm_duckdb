@@ -1,6 +1,6 @@
 pub use crate::bindings::{
-    duckdb_column as DuckDBColumn, duckdb_date, duckdb_hugeint, duckdb_interval,
-    duckdb_result as DuckDBResult, duckdb_time, duckdb_timestamp, duckdb_type,
+    duckdb_column as DuckDBColumn, duckdb_connection, duckdb_database, duckdb_date, duckdb_hugeint,
+    duckdb_interval, duckdb_result as DuckDBResult, duckdb_time, duckdb_timestamp, duckdb_type,
 };
 use libc::c_void;
 use std::convert::TryInto;
@@ -17,13 +17,6 @@ impl Display for duckdb_interval {
 }
 impl From<&duckdb_hugeint> for i128 {
     fn from(value: &duckdb_hugeint) -> i128 {
-        todo!();
-    }
-}
-
-impl Into<i128> for duckdb_hugeint {
-    fn into(self) -> i128 {
-        let sign = if self.upper >= 0 { 1 } else { -1 };
         let upper = if sign == -1 { -self.upper } else { self.upper };
 
         let mut twisted: i128 = upper.into();
