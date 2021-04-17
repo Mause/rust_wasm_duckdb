@@ -1,7 +1,7 @@
 use lazy_static::*;
 
 lazy_static! {
-    pub static ref empty_sig: std::ffi::CString =
+    pub static ref EMPTY_SIG: std::ffi::CString =
         unsafe { std::ffi::CString::from_vec_unchecked(vec![]) };
 }
 
@@ -36,7 +36,7 @@ macro_rules! jse {
             unsafe {
                 emscripten_asm_const_int(
                     SNIPPET as *const _ as *const u8,
-                    crate::jse::empty_sig.as_ptr() as *const _ as *const u8,
+                    crate::jse::EMPTY_SIG.as_ptr() as *const _ as *const u8,
                     std::ptr::null() as *const _ as *const u8,
                 ) as i32
             }
