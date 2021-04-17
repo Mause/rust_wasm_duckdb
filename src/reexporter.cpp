@@ -2,19 +2,6 @@
 #include "duckdb.hpp"
 #include <iostream>
 
-using namespace duckdb;
-
-struct DatabaseData {
-  DatabaseData() : database(nullptr) {}
-  ~DatabaseData() {
-    if (database) {
-      delete database;
-    }
-  }
-
-  duckdb::DuckDB *database;
-};
-
 extern "C"
 {
     void* mallocy() {
@@ -44,17 +31,5 @@ extern "C"
     duckdb_timestamp *duckdb_value_timestamp(duckdb_result *result, idx_t col, idx_t row)
     {
         return &((duckdb_timestamp *)result->columns[col].data)[row];
-    }
-
-    void ext_duckdb_close(duckdb_database *database) {
-        if (*database) {
-            auto wrapper = (DatabaseData *)*database;
-            delete wrapper;
-            *database = nullptr;
-        }
-    }
-
-    duckdb_connection create_connection(DatabaseData* db) {
-        return (duckdb_connection) new duckdb::Connection(*db->database);
     }
 }

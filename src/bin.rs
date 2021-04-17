@@ -87,7 +87,7 @@ extern "C" {
 
     fn duckdb_disconnect(con: *const Connection);
 
-    fn ext_duckdb_close(db: *const Database);
+    fn duckdb_close(db: *const Database);
 
     fn duckdb_query(
         con: *const Connection,
