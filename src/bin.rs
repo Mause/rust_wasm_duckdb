@@ -11,7 +11,7 @@ use libc::c_void;
 #[allow(non_camel_case_types)]
 pub type c_char = i8;
 use crate::db::DB;
-use crate::rendering::{form, Table};
+use crate::rendering::{Form, Table};
 use crate::types::{
     duckdb_blob, duckdb_connection, duckdb_database, duckdb_date, duckdb_hugeint, duckdb_interval,
     duckdb_time, duckdb_timestamp, duckdb_type as DuckDBType, DuckDBColumn, DuckDBResult,
@@ -286,7 +286,7 @@ unsafe fn run_async() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("DB open");
 
-    let string = html! { <>{form()}</> };
+    let string = html! { <>{Form {}}</> };
     set_body_html(string);
 
     Ok(())
@@ -350,7 +350,7 @@ extern "C" fn callback(query_: *const c_char) {
                 };
                 html! {
                     <div>
-                        {form()}
+                        {Form {}}
                         {table}
                     </div>
                 }
@@ -359,7 +359,7 @@ extern "C" fn callback(query_: *const c_char) {
                 let e = error.to_string();
                 html! {
                     <div>
-                        {form()}
+                        {Form {}}
                         <pre><code>{e}</code></pre>
                     </div>
                 }
