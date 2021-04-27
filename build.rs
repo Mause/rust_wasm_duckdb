@@ -65,6 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     bindgen::builder()
         .header("target/duckdb.h")
+        .header("src/interface.hpp")
         // .detect_include_paths(true)
         .clang_arg(format!(
             "-I{}",
