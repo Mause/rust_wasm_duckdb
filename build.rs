@@ -14,6 +14,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // TODO: reenable
     // println!("cargo:rustc-link-lib=static-nobundle=stdc++");
 
+    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=target/duckdb.hpp");
+    println!("cargo:rerun-if-changed=target/duckdb.cpp");
+    println!("cargo:rerun-if-changed=target/duckdb.h");
+    println!("cargo:rerun-if-changed=src/reexporter.cpp");
+    println!("cargo:rerun-if-changed=src/interface.cpp");
+
     let emar_path =
         which("emar").expect("Couldn't find emar, is the emscripten environment activated?");
 
