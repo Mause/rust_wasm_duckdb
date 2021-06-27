@@ -11,7 +11,7 @@ extern "C" {
 
 #[derive(Debug)]
 pub struct DB {
-    db: *const duckdb_database,
+    db: *const DatabaseData,
 }
 impl DB {
     pub fn new(path: Option<&str>) -> Result<Self, Box<dyn std::error::Error>> {
@@ -26,6 +26,8 @@ impl DB {
                 None => duckdb_open(std::ptr::null(), db)?,
             }
         };
+
+        let db = db as *mut DatabaseData;
 
         Ok(Self { db })
     }

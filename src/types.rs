@@ -45,13 +45,13 @@ impl Display for duckdb_hugeint {
 }
 
 extern "C" {
-    fn free(ptr: *const c_void);
+    pub fn free(ptr: *const c_void);
 }
 
 #[repr(C)]
 #[derive(Debug, Clone)]
 pub struct duckdb_blob {
-    data: *const c_void,
+    pub data: *const c_void,
     pub size: u64,
 }
 impl Drop for duckdb_blob {
