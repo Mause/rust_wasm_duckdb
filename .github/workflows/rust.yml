@@ -37,18 +37,10 @@ jobs:
         toolchain: nightly-2021-03-25
         override: true
         components: rustfmt, clippy
-        target: wasm32-unknown-emscripten
-    - name: Cache .cargo
-      id: cache-primes
-      uses: actions/cache@v2
+        target: wasm32-wasi
+    - uses: actions-rs/install@v0.1
       with:
-        path: ~/.cargo
-        key: ${{ runner.os }}-${{ hashFiles('Cargo**') }}
-    - name: Install rust script
-      uses: actions-rs/cargo@v1
-      with:
-        command: install
-        args: cargo-web
+        crate: cargo-wasi
         use-tool-cache: true
     - name: Install deps
       run: |

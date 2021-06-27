@@ -5,12 +5,12 @@ EMMAKEN_CFLAGS = "-s ERROR_ON_UNDEFINED_SYMBOLS=0 -s ALLOW_MEMORY_GROWTH=1 -s TO
 clear = true
 dependencies = ['prebuild']
 command = "cargo"
-args = ["build", "--tests", "--target", "wasm32-unknown-emscripten"]
+args = ["wasi", "build", "--tests"]
 
 [tasks.deploy]
 dependencies = ["ci-flow"]
 command = "cargo"
-args = ["web", "deploy", "--use-system-emscripten"]
+args = ["wasi", "deploy"]
 
 [tasks.docs]
 dependencies = ["prebuild"]
@@ -19,7 +19,7 @@ args = ["doc", "--target", "wasm32-unknown-emscripten", "--bins", "--document-pr
 
 [tasks.expand]
 command = "cargo"
-args = ["expand", "--target", "wasm32-unknown-emscripten", ">", "output.rs"]
+args = ["expand", "--target", "wasm32-wasi", ">", "output.rs"]
 
 [tasks.prebuild]
 condition = { files_not_exist = ["${CARGO_MAKE_WORKING_DIRECTORY}/target/duckdb.wasm", "${CARGO_MAKE_WORKING_DIRECTORY}/target/duckdb.hpp"] }
@@ -35,4 +35,4 @@ args = ["web", "start"]
 clear = true
 dependencies = ['build']
 command = "cargo"
-args = ["web", "test", "--nodejs", "--use-system-emscripten", "--", "--nocapture"]
+args = ["wasi", "test", "--nodejs", "--", "--nocapture"]

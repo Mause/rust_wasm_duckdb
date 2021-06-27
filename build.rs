@@ -1,78 +1,83 @@
 #![feature(try_trait)]
 
+use std::env::{join_paths, set_var, split_paths, var};
+use std::path::PathBuf;
 use which::which;
 
-fn eat(command: &mut std::process::Command) {
-    let res = command.output().expect("Compile");
-
-    if !res.status.success() {
-        panic!("{}", String::from_utf8(res.stderr).expect("String"));
-    }
+fn exists(s: String) -> String {
+    let path = std::path::Path::new(&s);
+    assert_eq!(path.exists(), true, "{}", &s);
+    return path.to_string_lossy().to_string();
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // TODO: reenable
-    // println!("cargo:rustc-link-lib=static-nobundle=stdc++");
+    let emcc_path = which("emcc").expect("emar");
+    let emscripten_path = emcc_path.parent().unwrap();
 
-    let emar_path =
-        which("emar").expect("Couldn't find emar, is the emscripten environment activated?");
+    let clang_path = emscripten_path.parent().unwrap().join("bin");
 
-    eat(cc::Build::new()
-        .get_compiler()
-        .to_command()
-        .arg("-fvisibility=default")
-        .arg("-fPIC")
-        .arg("-DDUCKDB_NO_THREADS=1")
-        .arg("-sWASM=1")
-        .arg("-DDUCKDB_BUILD_LIBRARY=1")
-        .arg("-sWARN_ON_UNDEFINED_SYMBOLS=1")
-        .arg("-sALLOW_MEMORY_GROWTH=1")
-        .arg("-sUSE_PTHREADS=0")
-        .arg("-sDISABLE_EXCEPTION_CATCHING=0")
-        .arg("-fexceptions")
-        .arg("-Wno-unused-parameter")
-        .arg("--no-entry")
-        .arg("-shared")
-        .arg("src/reexporter.cpp")
-        .arg("-Itarget")
-        // .arg("target/duckdb.wasm")
-        .arg("target/duckdb.cpp")
-        .arg("-o")
-        .arg("duckdb.o"));
+    let mut path = split_paths(&var("PATH").unwrap()).collect::<Vec<PathBuf>>();
+    path.push((*clang_path.to_string_lossy()).into());
+    eprintln!("{:?}", path);
+    set_var("PATH", join_paths(path)?);
 
-    println!("{:?}", &emar_path);
-    eat(std::process::Command::new(&emar_path)
-        .arg("rcs")
-        .arg("target/libduckdb.a")
-        .arg("duckdb.o"));
-
-    println!("cargo:rustc-link-lib=static-nobundle=duckdb");
-    println!(
-        "cargo:rustc-link-search={}",
-        std::env::current_dir()?
-            .join("target")
-            .to_str()
-            .expect("aaaaa")
-    );
+    cc::Build::new()
+        .flag("-fvisibility=default")
+        .flag("-fPIC")
+        .flag("-DDUCKDB_NO_THREADS=1")
+        .flag("-DDUCKDB_BUILD_LIBRARY=1")
+        .flag("-fexceptions")
+        .flag("-Wno-unused-parameter")
+        //.cpp(true)
+        .flag("-shared")
+        .flag("-std=gnu++17")
+        .file("src/reexporter.cpp")
+        .include(exists(format!(
+            "{}/system/lib/libcxx/include",
+            emscripten_path.display()
+        )))
+        .include(exists(format!(
+            "{}/system/lib/libcxxabi/include",
+            emscripten_path.display()
+        )))
+        .include(exists(format!(
+            "{}/system/include",
+            emscripten_path.display()
+        )))
+        .include(exists(format!(
+            "{}/system/lib/libc/musl/include",
+            emscripten_path.display()
+        )))
+        .include(exists(format!(
+            "{}/system/lib/libc/musl/arch/emscripten",
+            emscripten_path.display()
+        )))
+        .include(exists(format!(
+            "{}/system/lib/libc/musl/arch/generic",
+            emscripten_path.display()
+        )))
+        .include("target")
+        .file("target/duckdb.cpp")
+        .compile("duckdb");
 
     #[cfg(windows)]
     {
-        let p = emar_path.parent().unwrap().parent().unwrap().join("bin");
-
-        println!("{:?}", p);
-        std::env::set_var("LIBCLANG_PATH", &p);
+        println!("{:?}", clang_path);
+        std::env::set_var("LIBCLANG_PATH", &clang_path);
     }
 
     bindgen::builder()
         .header("target/duckdb.h")
-        // .detect_include_paths(true)
+        .detect_include_paths(true)
+        /*
         .clang_arg(format!(
             "-I{}",
-            emar_path
+            emscripten_path
                 .join("../cache/sysroot/include")
                 .to_str()
                 .expect("include path")
         ))
+        */
         .generate_block(true)
         .rustified_enum(".*")
         // .clang_arg("-DDUCKDB_BUILD_LIBRARY")
