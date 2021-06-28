@@ -14,6 +14,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // TODO: reenable
     // println!("cargo:rustc-link-lib=static-nobundle=stdc++");
 
+    assert_eq!(
+        String::from_utf8(
+            cc::Build::new()
+                .get_compiler()
+                .to_command()
+                .arg("--version")
+                .output()
+                .expect("Couldnt check emcc version")
+                .stdout
+        )
+        .expect("Couldnt check emcc version")
+        .contains("2.0.15"),
+        true
+    );
+
     let emar_path =
         which("emar").expect("Couldn't find emar, is the emscripten environment activated?");
 
