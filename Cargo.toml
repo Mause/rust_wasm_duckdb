@@ -2,12 +2,6 @@
 name = "bin"
 path = "src/bin.rs"
 
-[build-dependencies]
-cc = { version="*", features=['parallel'] }
-shellexpand = "*"
-which = "*"
-bindgen = "0.58.1"
-
 [dependencies]
 count_tts = "*"
 libduckdb-sys = { git="https://github.com/wangfenjin/duckdb-rs", rev="4673f1004fffdca296f707a6396b417c2ccbad5d", features=["bundled"] }
