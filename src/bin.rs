@@ -119,7 +119,7 @@ extern "C" {
     fn duckdb_value_varchar(result: *const DuckDBResult, col: u64, row: u64) -> *const c_char;
     /// Fetches a blob from a result set column. Returns a blob with blob.data set to nullptr on failure or NULL. The
     /// resulting "blob.data" must be freed with free.
-    fn duckdb_value_blob(result: *const DuckDBResult, blob: *const duckdb_blob, col: u64, row: u64);
+    fn duckdb_value_blob(blob: *const duckdb_blob, result: *const DuckDBResult, col: u64, row: u64);
 
     fn duckdb_value_date(result: *const DuckDBResult, col: u64, row: u64) -> *const duckdb_date;
     fn duckdb_value_time(result: *const DuckDBResult, col: u64, row: u64) -> *const duckdb_time;
@@ -259,7 +259,7 @@ impl<'a> ResolvedResult<'a> {
                 ),
                 DuckDBType::DUCKDB_TYPE_BLOB => {
                     let ptr: *const duckdb_blob = malloc(PTR);
-                    duckdb_value_blob(result, ptr, col, row);
+                    duckdb_value_blob(ptr, result, col, row);
                     DbType::Blob(ptr.as_ref().expect("Blob").clone())
                 }
                 DuckDBType::DUCKDB_TYPE_INTERVAL => DbType::Interval(
