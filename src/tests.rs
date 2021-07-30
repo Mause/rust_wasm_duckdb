@@ -62,6 +62,10 @@ speculate! {
     }
     */
 
+    test "date" {
+        basic_test("select current_date");
+    }
+
     test "works" {
         basic_test("select 1");
 
