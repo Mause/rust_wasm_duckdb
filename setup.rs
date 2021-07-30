@@ -26,7 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let i = octocrab::instance();
     let repo = i.repos("cwida", "duckdb");
     let releases = repo.releases();
-    let release = &releases.get_by_tag("v0.2.5").await.expect("current");
+    let release = &releases.get_by_tag("v0.2.7").await.expect("current");
 
     let latest = &releases.get_latest().await.expect("latest").tag_name;
 
