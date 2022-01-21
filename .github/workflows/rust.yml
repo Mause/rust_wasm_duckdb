@@ -34,7 +34,7 @@ jobs:
     - name: Install latest nightly
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly-2021-03-25
+        toolchain: nightly
         override: true
         components: rustfmt, clippy
         target: wasm32-unknown-emscripten
