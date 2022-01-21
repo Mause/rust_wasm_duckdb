@@ -34,7 +34,7 @@ jobs:
     - name: Install latest nightly
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly-2021-03-25
+        toolchain: nightly
         override: true
         components: rustfmt, clippy
         target: wasm32-unknown-emscripten
@@ -44,12 +44,12 @@ jobs:
       with:
         path: ~/.cargo
         key: ${{ runner.os }}-${{ hashFiles('Cargo**') }}
-    - name: Install rust script
-      uses: actions-rs/cargo@v1
-      with:
-        command: install
-        args: cargo-web
-        use-tool-cache: true
+    #- name: Install cargo web
+    #  uses: actions-rs/cargo@v1
+    #  with:
+    #    command: install
+    #    args: cargo-web
+    #    use-tool-cache: true
     - name: Install deps
       run: |
         sudo apt update
