@@ -6,7 +6,7 @@ repos:
     # -   id: cargo-check
     # -   id: clippy
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v3.4.0
+  rev: v4.0.1
   hooks:
     - id: check-yaml
     - id: check-json
@@ -17,7 +17,7 @@ repos:
     - id: end-of-file-fixer
     - id: trailing-whitespace
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: f7d063b
+  rev: v2.1.0
   hooks:
   - id: pretty-format-toml
     args: [--autofix]
