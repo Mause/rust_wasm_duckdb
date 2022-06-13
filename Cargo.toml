@@ -14,7 +14,7 @@ lazy_static = "*"
 libc = "*"
 render = "*"
 string-error = "0.1.0"
-strum_macros = "0.21.1"
+strum_macros = "0.24.1"
 
 [dev-dependencies]
 kuchiki = "0.8.1"
