@@ -44,12 +44,6 @@ jobs:
       with:
         path: ~/.cargo
         key: ${{ runner.os }}-${{ hashFiles('Cargo**') }}
-    - name: Install rust script
-      uses: actions-rs/cargo@v1
-      with:
-        command: install
-        args: cargo-web
-        use-tool-cache: true
     - name: Install deps
       run: |
         sudo apt update
